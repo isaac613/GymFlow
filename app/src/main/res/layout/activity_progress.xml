@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Progress screen -->
+<!-- Dashboard-style progress screen -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -9,14 +9,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:padding="20dp">
 
         <TextView
             android:id="@+id/tvProgressTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="60dp"
-            android:text="Progress"
+            android:layout_marginTop="48dp"
+            android:text="Progress Dashboard"
             android:textColor="#FFFFFF"
             android:textSize="32sp"
             android:textStyle="bold" />
@@ -25,7 +25,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="A summary of your current training activity."
+            android:text="Your workout analytics at a glance"
             android:textColor="#9E9E9E"
             android:textSize="15sp" />
 
@@ -33,37 +33,341 @@
             android:id="@+id/btnBackHomeFromProgress"
             android:layout_width="match_parent"
             android:layout_height="52dp"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="18dp"
             android:background="@drawable/secondary_button_bg"
             android:text="Back to Home"
             android:textAllCaps="false"
             android:textColor="#FFFFFF" />
 
+        <!-- Hero analytics card -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="22dp"
+            android:background="@drawable/hero_panel_bg"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Overall Progress"
+                android:textColor="#E8EAF6"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvHeroPercent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="0%"
+                android:textColor="#FFFFFF"
+                android:textSize="36sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvHeroSubtext"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="0 of 20 exercises completed"
+                android:textColor="#D6DBFF"
+                android:textSize="15sp" />
+
+            <ProgressBar
+                android:id="@+id/progressOverall"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:progressTint="#FFFFFF" />
+        </LinearLayout>
+
+        <!-- Stat cards -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="110dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/stat_card_bg"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Exercises"
+                    android:textColor="#AEB5C8"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tvExercisesCompletedValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="0"
+                    android:textColor="#FFFFFF"
+                    android:textSize="28sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Completed"
+                    android:textColor="#C7CEDB"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="110dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1"
+                android:background="@drawable/stat_card_bg"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Categories"
+                    android:textColor="#AEB5C8"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tvCategoriesStartedValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="0"
+                    android:textColor="#FFFFFF"
+                    android:textSize="28sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Started"
+                    android:textColor="#C7CEDB"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="110dp"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/stat_card_bg"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Workouts"
+                    android:textColor="#AEB5C8"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tvWorkoutsFinishedValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="0"
+                    android:textColor="#FFFFFF"
+                    android:textSize="28sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Finished"
+                    android:textColor="#C7CEDB"
+                    android:textSize="13sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Category breakdown -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
             android:background="@drawable/screen_panel_bg"
             android:orientation="vertical"
             android:padding="18dp">
 
             <TextView
-                android:id="@+id/tvCompletedWorkouts"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Completed workouts: 12"
+                android:text="Training Breakdown"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <!-- Upper Body -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Upper Body"
+                android:textColor="#DADADA"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/tvUpperBodyValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0 / 4"
+                android:textColor="#9E9E9E"
+                android:textSize="13sp" />
+
+            <ProgressBar
+                android:id="@+id/pbUpperBody"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:progressTint="#5C6BC0" />
+
+            <!-- Lower Body -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="Lower Body"
+                android:textColor="#DADADA"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/tvLowerBodyValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0 / 4"
+                android:textColor="#9E9E9E"
+                android:textSize="13sp" />
+
+            <ProgressBar
+                android:id="@+id/pbLowerBody"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:progressTint="#5C6BC0" />
+
+            <!-- Push -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="Push"
+                android:textColor="#DADADA"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/tvPushValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0 / 4"
+                android:textColor="#9E9E9E"
+                android:textSize="13sp" />
+
+            <ProgressBar
+                android:id="@+id/pbPush"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:progressTint="#5C6BC0" />
+
+            <!-- Pull -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="Pull"
+                android:textColor="#DADADA"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/tvPullValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0 / 4"
+                android:textColor="#9E9E9E"
+                android:textSize="13sp" />
+
+            <ProgressBar
+                android:id="@+id/pbPull"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:progressTint="#5C6BC0" />
+
+            <!-- Core -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="Core"
+                android:textColor="#DADADA"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/tvCoreValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0 / 4"
+                android:textColor="#9E9E9E"
+                android:textSize="13sp" />
+
+            <ProgressBar
+                android:id="@+id/pbCore"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:progressTint="#5C6BC0" />
+        </LinearLayout>
+
+        <!-- Recent activity -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="24dp"
+            android:background="@drawable/screen_panel_bg"
+            android:orientation="vertical"
+            android:padding="18dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Recent Activity"
                 android:textColor="#FFFFFF"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/tvTrainingHours"
+                android:id="@+id/tvLastCompletedExercise"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="Total training hours: 18"
+                android:layout_marginTop="14dp"
+                android:text="Last completed: None"
                 android:textColor="#D3D3D3"
-                android:textSize="17sp" />
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/tvMostActiveCategory"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Most recent category: None"
+                android:textColor="#D3D3D3"
+                android:textSize="15sp" />
         </LinearLayout>
 
     </LinearLayout>

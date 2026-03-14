@@ -10,10 +10,10 @@ import androidx.recyclerview.widget.RecyclerView
 
 class ExerciseAdapter(
     private val exercises: MutableList<Exercise>,
-    private val onExerciseUpdated: () -> Unit
+    private val onExerciseUpdated: (Exercise) -> Unit
 ) : RecyclerView.Adapter<ExerciseAdapter.ExerciseViewHolder>() {
 
-    // ViewHolder stores references to the views inside each RecyclerView item
+    // Holds references to the views inside each RecyclerView item
     class ExerciseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val cardContainer: LinearLayout = itemView.findViewById(R.id.cardContainer)
         val tvExerciseName: TextView = itemView.findViewById(R.id.tvExerciseName)
@@ -24,7 +24,6 @@ class ExerciseAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ExerciseViewHolder {
-        // Inflate the XML layout used for a single exercise card
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_exercise, parent, false)
 
@@ -34,19 +33,19 @@ class ExerciseAdapter(
     override fun onBindViewHolder(holder: ExerciseViewHolder, position: Int) {
         val exercise = exercises[position]
 
-        // Bind the basic exercise data
+        // Bind exercise content into the card
         holder.tvExerciseName.text = exercise.name
         holder.tvExerciseSets.text = "Sets: ${exercise.sets}"
         holder.tvExerciseReps.text = "Reps: ${exercise.reps}"
 
-        // Small subtitle for extra visual polish
+        // Small helper subtitle for better UI polish
         holder.tvExerciseSubtitle.text = if (exercise.isCompleted) {
             "Exercise completed"
         } else {
             "Tap below when finished"
         }
 
-        // Update the card appearance depending on completion state
+        // Change appearance depending on completion state
         if (exercise.isCompleted) {
             holder.cardContainer.setBackgroundResource(R.drawable.exercise_card_completed)
             holder.btnCompleteExercise.text = "Completed"
@@ -55,15 +54,15 @@ class ExerciseAdapter(
             holder.btnCompleteExercise.text = "Complete Exercise"
         }
 
-        // Toggle completion state when the button is pressed
         holder.btnCompleteExercise.setOnClickListener {
+            // Toggle completion state
             exercise.isCompleted = !exercise.isCompleted
 
-            // Refresh the changed row only
+            // Refresh only the changed row
             notifyItemChanged(position)
 
-            // Notify the activity so the progress text and bar can update
-            onExerciseUpdated()
+            // Send the changed exercise back to the activity
+            onExerciseUpdated(exercise)
         }
     }
 

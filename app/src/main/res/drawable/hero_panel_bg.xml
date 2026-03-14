@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Stronger hero background for the top dashboard card -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <gradient
+        android:angle="45"
+        android:endColor="#3949AB"
+        android:startColor="#5C6BC0" />
+    <corners android:radius="24dp" />
+</shape>
