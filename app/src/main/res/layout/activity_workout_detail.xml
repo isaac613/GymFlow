@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Workout detail screen with progress and RecyclerView -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -10,40 +11,62 @@
         android:id="@+id/tvWorkoutTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="40dp"
+        android:layout_marginTop="36dp"
         android:text="Workout"
         android:textColor="#FFFFFF"
-        android:textSize="30sp"
+        android:textSize="32sp"
         android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tvWorkoutSubtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Complete each exercise and track your session progress."
+        android:textColor="#9E9E9E"
+        android:textSize="15sp" />
 
     <Button
         android:id="@+id/btnBackCategories"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="Back to Categories" />
+        android:layout_height="52dp"
+        android:layout_marginTop="18dp"
+        android:background="@drawable/secondary_button_bg"
+        android:text="Back to Categories"
+        android:textAllCaps="false"
+        android:textColor="#FFFFFF" />
 
-    <TextView
-        android:id="@+id/tvProgressText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="Completed: 0 / 0 exercises"
-        android:textColor="#D3D3D3"
-        android:textSize="18sp" />
-
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="?android:attr/progressBarStyleHorizontal"
+    <!-- Progress panel -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp" />
+        android:layout_marginTop="18dp"
+        android:background="@drawable/screen_panel_bg"
+        android:orientation="vertical"
+        android:padding="18dp">
+
+        <TextView
+            android:id="@+id/tvProgressText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Completed: 0 / 0 exercises"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp" />
+    </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewExercises"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="18dp"
         android:layout_weight="1" />
 
 </LinearLayout>

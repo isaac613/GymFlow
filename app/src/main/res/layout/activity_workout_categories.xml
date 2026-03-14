@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+
+<!-- Workout categories screen -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -14,53 +16,85 @@
             android:id="@+id/tvCategoriesTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="40dp"
+            android:layout_marginTop="48dp"
             android:text="Workout Categories"
             android:textColor="#FFFFFF"
-            android:textSize="30sp"
+            android:textSize="32sp"
             android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Pick the type of session you want to train today."
+            android:textColor="#9E9E9E"
+            android:textSize="15sp" />
 
         <Button
             android:id="@+id/btnBackHome"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Back to Home" />
+            android:layout_height="52dp"
+            android:layout_marginTop="20dp"
+            android:background="@drawable/secondary_button_bg"
+            android:text="Back to Home"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF" />
 
         <Button
             android:id="@+id/btnUpperBody"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="Upper Body" />
+            android:layout_height="56dp"
+            android:layout_marginTop="28dp"
+            android:background="@drawable/primary_button_bg"
+            android:text="Upper Body"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="17sp" />
 
         <Button
             android:id="@+id/btnLowerBody"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Lower Body" />
+            android:layout_height="56dp"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/primary_button_bg"
+            android:text="Lower Body"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="17sp" />
 
         <Button
             android:id="@+id/btnPush"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Push" />
+            android:layout_height="56dp"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/primary_button_bg"
+            android:text="Push"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="17sp" />
 
         <Button
             android:id="@+id/btnPull"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Pull" />
+            android:layout_height="56dp"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/primary_button_bg"
+            android:text="Pull"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="17sp" />
 
         <Button
             android:id="@+id/btnCore"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Core" />
+            android:layout_height="56dp"
+            android:layout_marginTop="14dp"
+            android:layout_marginBottom="24dp"
+            android:background="@drawable/primary_button_bg"
+            android:text="Core"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="17sp" />
 
     </LinearLayout>
 </ScrollView>
