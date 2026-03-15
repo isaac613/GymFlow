@@ -56,8 +56,11 @@
     <Button
         android:id="@+id/btnCompleteExercise"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
         android:layout_marginTop="18dp"
-        android:text="Complete Exercise" />
-
+        android:background="@drawable/exercise_button_active"
+        android:text="Complete Exercise"
+        android:textAllCaps="false"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"/>
 </LinearLayout>

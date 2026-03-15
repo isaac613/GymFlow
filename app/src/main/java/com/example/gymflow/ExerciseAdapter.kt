@@ -47,11 +47,20 @@ class ExerciseAdapter(
 
         // Change appearance depending on completion state
         if (exercise.isCompleted) {
+
             holder.cardContainer.setBackgroundResource(R.drawable.exercise_card_completed)
-            holder.btnCompleteExercise.text = "Completed"
+
+            holder.btnCompleteExercise.text = "✓ Completed"
+            holder.btnCompleteExercise.setBackgroundResource(R.drawable.exercise_button_done)
+            holder.btnCompleteExercise.isEnabled = false
+
         } else {
+
             holder.cardContainer.setBackgroundResource(R.drawable.exercise_card_default)
+
             holder.btnCompleteExercise.text = "Complete Exercise"
+            holder.btnCompleteExercise.setBackgroundResource(R.drawable.exercise_button_active)
+            holder.btnCompleteExercise.isEnabled = true
         }
 
         holder.btnCompleteExercise.setOnClickListener {
