@@ -11,26 +11,38 @@
         android:orientation="vertical"
         android:padding="24dp">
 
-        <!-- App title -->
+        <!-- App Title -->
         <TextView
             android:id="@+id/tvAppTitle"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="64dp"
+            android:gravity="center"
             android:text="GymFlow"
             android:textColor="#FFFFFF"
-            android:textSize="36sp"
+            android:textSize="38sp"
             android:textStyle="bold" />
 
         <!-- Subtitle -->
         <TextView
             android:id="@+id/tvSubtitle"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
+            android:gravity="center"
             android:text="Train smarter. Track progress. Stay consistent."
             android:textColor="#9E9E9E"
             android:textSize="16sp" />
+
+        <!-- Dumbbell Emoji Visual -->
+        <TextView
+            android:id="@+id/tvDumbbell"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:gravity="center"
+            android:text="🏋️"
+            android:textSize="42sp" />
 
         <!-- Hero panel -->
         <LinearLayout
@@ -56,9 +68,10 @@
                 android:text="Choose a workout category and start completing exercises."
                 android:textColor="#BDBDBD"
                 android:textSize="15sp" />
+
         </LinearLayout>
 
-        <!-- Primary action -->
+        <!-- Primary Action -->
         <Button
             android:id="@+id/btnViewWorkouts"
             android:layout_width="match_parent"
@@ -70,7 +83,7 @@
             android:textColor="#FFFFFF"
             android:textSize="17sp" />
 
-        <!-- Secondary action -->
+        <!-- Secondary Action -->
         <Button
             android:id="@+id/btnViewProgress"
             android:layout_width="match_parent"
@@ -83,4 +96,5 @@
             android:textSize="17sp" />
 
     </LinearLayout>
+
 </ScrollView>
