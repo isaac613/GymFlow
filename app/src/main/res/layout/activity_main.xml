@@ -98,6 +98,42 @@
             android:textColor="#FFFFFF"
             android:textSize="17sp" />
 
+        <!-- Crash Action -->
+        <Button
+            android:id="@+id/btnCrash"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/secondary_button_bg"
+            android:text="Test Crash"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="17sp" />
+
+        <!-- Firestore Save Action -->
+        <Button
+            android:id="@+id/btnSaveData"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/secondary_button_bg"
+            android:text="Save Workout to Firestore"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="17sp" />
+
+        <!-- Firestore Read Action -->
+        <Button
+            android:id="@+id/btnReadData"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/secondary_button_bg"
+            android:text="Read Workouts from Firestore"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="17sp" />
+
     </LinearLayout>
 
 </ScrollView>
