@@ -1,0 +1,41 @@
+rules_version = '2';
+
+// GymFlow Firestore security rules.
+// These replace the temporary "test mode" rules (which expire ~30 days
+// after the database is created and would break the app mid-grading).
+//
+// Deployed via: Firebase Console -> Firestore Database -> Rules -> paste -> Publish
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Workout plan (shared by all users).
+    // Any signed-in user can read it. Writes are also allowed for signed-in
+    // users so the app can seed an empty database on first run
+    // (see WorkoutRepository.seedDatabaseIfEmpty).
+    match /categories/{categoryId} {
+      allow read, write: if request.auth != null;
+    }
+
+    match /exercises/{exerciseId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // App configuration (e.g. the daily target text on the home screen)
+    match /config/{configId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Per-user data: each user can only read and write their OWN document
+    // and progress subcollection. Nobody can see another user's progress.
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      match /{document=**} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // Everything else is denied by default (Firestore denies anything
+    // that no rule explicitly allows).
+  }
+}

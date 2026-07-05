@@ -4,7 +4,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#121212">
+    android:background="@color/background">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -40,61 +40,15 @@
             android:textAllCaps="false"
             android:textColor="#FFFFFF" />
 
-        <Button
-            android:id="@+id/btnUpperBody"
+        <!-- Category buttons are created dynamically from Firestore data.
+             See WorkoutCategoriesActivity.loadCategoriesFromFirestore(). -->
+        <LinearLayout
+            android:id="@+id/categoriesContainer"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginTop="28dp"
-            android:background="@drawable/primary_button_bg"
-            android:text="Upper Body"
-            android:textAllCaps="false"
-            android:textColor="#FFFFFF"
-            android:textSize="17sp" />
-
-        <Button
-            android:id="@+id/btnLowerBody"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginTop="14dp"
-            android:background="@drawable/primary_button_bg"
-            android:text="Lower Body"
-            android:textAllCaps="false"
-            android:textColor="#FFFFFF"
-            android:textSize="17sp" />
-
-        <Button
-            android:id="@+id/btnPush"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginTop="14dp"
-            android:background="@drawable/primary_button_bg"
-            android:text="Push"
-            android:textAllCaps="false"
-            android:textColor="#FFFFFF"
-            android:textSize="17sp" />
-
-        <Button
-            android:id="@+id/btnPull"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginTop="14dp"
-            android:background="@drawable/primary_button_bg"
-            android:text="Pull"
-            android:textAllCaps="false"
-            android:textColor="#FFFFFF"
-            android:textSize="17sp" />
-
-        <Button
-            android:id="@+id/btnCore"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
             android:layout_marginBottom="24dp"
-            android:background="@drawable/primary_button_bg"
-            android:text="Core"
-            android:textAllCaps="false"
-            android:textColor="#FFFFFF"
-            android:textSize="17sp" />
+            android:orientation="vertical" />
 
     </LinearLayout>
 </ScrollView>

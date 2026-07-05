@@ -1,14 +1,21 @@
 package com.example.gymflow
 
-import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.SetOptions
 
+// Shows the exercises of one category and lets the user mark them complete.
+// Exercises are loaded from Firestore and each user's progress is saved
+// under their own account (users/{uid}/progress/{category}).
 class WorkoutDetailActivity : AppCompatActivity() {
 
     private lateinit var tvWorkoutTitle: TextView
@@ -18,18 +25,24 @@ class WorkoutDetailActivity : AppCompatActivity() {
     private lateinit var btnBackCategories: Button
 
     private lateinit var exerciseAdapter: ExerciseAdapter
-    private lateinit var exercises: MutableList<Exercise>
+    private val exercises = mutableListOf<Exercise>()
 
     private lateinit var category: String
+    private lateinit var uid: String
 
-    // SharedPreferences is used to store lightweight local app data
-    private val prefs by lazy {
-        getSharedPreferences("gymflow_prefs", Context.MODE_PRIVATE)
-    }
+    private val db get() = WorkoutRepository.db
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_workout_detail)
+
+        // A signed-in user is required — progress is stored per user
+        val user = FirebaseAuth.getInstance().currentUser
+        if (user == null) {
+            finish()
+            return
+        }
+        uid = user.uid
 
         // Connect views from XML
         tvWorkoutTitle = findViewById(R.id.tvWorkoutTitle)
@@ -42,39 +55,64 @@ class WorkoutDetailActivity : AppCompatActivity() {
         category = intent.getStringExtra("category") ?: "Workout"
         tvWorkoutTitle.text = category
 
-        // Load exercises for this category
-        exercises = getExercisesForCategory(category).toMutableList()
-
-        // Restore saved completion state for each exercise
-        restoreExerciseStates()
-
-        // Mark this category as visited/started
-        markCategoryStarted(category)
-
         // Set up RecyclerView
         recyclerView.layoutManager = LinearLayoutManager(this)
-
         exerciseAdapter = ExerciseAdapter(exercises) { changedExercise ->
-            // Every time a user toggles an exercise, update screen progress
+            // Every time a user toggles an exercise, update the screen
+            // and save the new state to Firestore
             updateProgress()
-
-            // Save this exercise state locally
-            saveExerciseState(category, changedExercise)
-
-            // Recalculate dashboard data
-            saveDashboardStats(changedExercise)
+            saveExerciseState(changedExercise)
         }
-
         recyclerView.adapter = exerciseAdapter
 
         btnBackCategories.setOnClickListener {
             finish()
         }
 
-        updateProgress()
+        // Mark this category as started for the progress dashboard
+        markCategoryStarted()
+
+        // Load the exercises and the user's saved progress from Firestore
+        loadExercisesFromFirestore()
     }
 
-    // Updates the local screen progress text and bar
+    // Loads this category's exercises, then merges in the user's completion state
+    private fun loadExercisesFromFirestore() {
+        tvProgressText.text = "Loading exercises..."
+
+        db.collection("exercises")
+            .whereEqualTo("category", category)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                // Convert documents into Exercise objects, keeping the plan's order
+                val loaded = snapshot.documents
+                    .mapNotNull { it.toObject(Exercise::class.java) }
+                    .sortedBy { it.order }
+
+                // Now fetch which exercises this user already completed
+                progressDoc().get()
+                    .addOnSuccessListener { progress ->
+                        val completedNames =
+                            progress.get("completedExercises") as? List<*> ?: emptyList<Any>()
+
+                        for (exercise in loaded) {
+                            exercise.isCompleted = completedNames.contains(exercise.name)
+                        }
+
+                        exercises.clear()
+                        exercises.addAll(loaded)
+                        exerciseAdapter.notifyDataSetChanged()
+                        updateProgress()
+                    }
+            }
+            .addOnFailureListener { e ->
+                Log.w(TAG, "Failed to load exercises", e)
+                Toast.makeText(this, "Could not load exercises: ${e.message}", Toast.LENGTH_LONG)
+                    .show()
+            }
+    }
+
+    // Updates the on-screen progress text and bar
     private fun updateProgress() {
         val completedCount = exercises.count { it.isCompleted }
         val totalCount = exercises.size
@@ -84,139 +122,43 @@ class WorkoutDetailActivity : AppCompatActivity() {
         progressBar.progress = completedCount
     }
 
-    // Saves the completion state of a single exercise
-    private fun saveExerciseState(category: String, exercise: Exercise) {
-        prefs.edit()
-            .putBoolean("exercise_${category}_${exercise.name}", exercise.isCompleted)
-            .apply()
-    }
+    // Saves the completion state of a single exercise to Firestore
+    private fun saveExerciseState(exercise: Exercise) {
+        if (exercise.isCompleted) {
+            // Add the exercise name to this user's completed list for the category
+            progressDoc().set(
+                mapOf("completedExercises" to FieldValue.arrayUnion(exercise.name)),
+                SetOptions.merge()
+            )
 
-    // Restores saved completion state when reopening a category
-    private fun restoreExerciseStates() {
-        for (exercise in exercises) {
-            exercise.isCompleted =
-                prefs.getBoolean("exercise_${category}_${exercise.name}", false)
+            // Remember the most recent completion for the progress dashboard
+            db.collection("users").document(uid).set(
+                mapOf(
+                    "lastCompletedExercise" to exercise.name,
+                    "lastCompletedCategory" to category
+                ),
+                SetOptions.merge()
+            )
+        } else {
+            // Exercise was un-completed — remove it from the list
+            progressDoc().set(
+                mapOf("completedExercises" to FieldValue.arrayRemove(exercise.name)),
+                SetOptions.merge()
+            )
         }
     }
 
-    // Saves global dashboard statistics used by ProgressActivity
-    private fun saveDashboardStats(changedExercise: Exercise) {
-        val editor = prefs.edit()
-
-        val totalExercisesCompleted = getTotalCompletedExercises()
-        editor.putInt("total_exercises_completed", totalExercisesCompleted)
-
-        // Save the most recent completed exercise only when toggled on
-        if (changedExercise.isCompleted) {
-            editor.putString("last_completed_exercise", changedExercise.name)
-            editor.putString("last_completed_category", category)
-        }
-
-        // Save per-category completed count
-        val completedInCategory = exercises.count { it.isCompleted }
-        editor.putInt("completed_$category", completedInCategory)
-        editor.putInt("total_$category", exercises.size)
-
-        // Count how many categories were started at least once
-        editor.putInt("categories_started_count", getStartedCategoriesCount())
-
-        // A category is considered fully finished if all its exercises are completed
-        editor.putInt("workouts_finished_count", getFinishedWorkoutsCount())
-
-        editor.apply()
+    // Marks this category as visited/started for the current user
+    private fun markCategoryStarted() {
+        progressDoc().set(mapOf("started" to true), SetOptions.merge())
     }
 
-    // Marks category as started when user enters it
-    private fun markCategoryStarted(category: String) {
-        prefs.edit()
-            .putBoolean("started_$category", true)
-            .apply()
+    // The Firestore document that holds this user's progress for this category
+    private fun progressDoc() =
+        db.collection("users").document(uid)
+            .collection("progress").document(category)
 
-        prefs.edit()
-            .putInt("categories_started_count", getStartedCategoriesCount())
-            .apply()
-    }
-
-    // Counts all completed exercises across all categories
-    private fun getTotalCompletedExercises(): Int {
-        val categories = listOf("Upper Body", "Lower Body", "Push", "Pull", "Core")
-        var totalCompleted = 0
-
-        for (cat in categories) {
-            val categoryExercises = getExercisesForCategory(cat)
-            for (exercise in categoryExercises) {
-                val isCompleted = prefs.getBoolean("exercise_${cat}_${exercise.name}", false)
-                if (isCompleted) totalCompleted++
-            }
-        }
-
-        return totalCompleted
-    }
-
-    // Counts how many categories were entered by the user
-    private fun getStartedCategoriesCount(): Int {
-        val categories = listOf("Upper Body", "Lower Body", "Push", "Pull", "Core")
-        return categories.count { prefs.getBoolean("started_$it", false) }
-    }
-
-    // Counts how many full categories are completely finished
-    private fun getFinishedWorkoutsCount(): Int {
-        val categories = listOf("Upper Body", "Lower Body", "Push", "Pull", "Core")
-        var finishedCount = 0
-
-        for (cat in categories) {
-            val total = getExercisesForCategory(cat).size
-            val completed = getExercisesForCategory(cat).count {
-                prefs.getBoolean("exercise_${cat}_${it.name}", false)
-            }
-
-            if (total > 0 && completed == total) {
-                finishedCount++
-            }
-        }
-
-        return finishedCount
-    }
-
-    // Returns the workout data for the selected category
-    private fun getExercisesForCategory(category: String): List<Exercise> {
-        return when (category) {
-            "Upper Body" -> listOf(
-                Exercise("Bench Press", 4, 10),
-                Exercise("Pull Ups", 3, 8),
-                Exercise("Shoulder Press", 3, 10),
-                Exercise("Bicep Curls", 3, 12)
-            )
-
-            "Lower Body" -> listOf(
-                Exercise("Squats", 4, 12),
-                Exercise("Leg Press", 3, 10),
-                Exercise("Romanian Deadlift", 3, 8),
-                Exercise("Calf Raises", 4, 15)
-            )
-
-            "Push" -> listOf(
-                Exercise("Bench Press", 4, 10),
-                Exercise("Incline Dumbbell Press", 3, 10),
-                Exercise("Shoulder Press", 3, 10),
-                Exercise("Tricep Pushdown", 3, 12)
-            )
-
-            "Pull" -> listOf(
-                Exercise("Deadlift", 3, 6),
-                Exercise("Lat Pulldown", 3, 10),
-                Exercise("Seated Row", 3, 12),
-                Exercise("Hammer Curl", 3, 12)
-            )
-
-            "Core" -> listOf(
-                Exercise("Plank", 3, 60),
-                Exercise("Leg Raises", 3, 15),
-                Exercise("Russian Twists", 3, 20),
-                Exercise("Cable Crunch", 3, 15)
-            )
-
-            else -> emptyList()
-        }
+    companion object {
+        private const val TAG = "WorkoutDetailActivity"
     }
 }
