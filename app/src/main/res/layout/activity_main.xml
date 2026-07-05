@@ -3,7 +3,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#121212">
+    android:background="@color/background">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -11,16 +11,39 @@
         android:orientation="vertical"
         android:padding="24dp">
 
-        <!-- App Title -->
+        <!-- Signed-in user's profile photo inside a green ring.
+             Tapping it opens the camera to take a new photo. -->
+        <ImageView
+            android:id="@+id/imgProfile"
+            android:layout_width="104dp"
+            android:layout_height="104dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="40dp"
+            android:background="@drawable/profile_ring_bg"
+            android:padding="5dp"
+            android:src="@drawable/ic_dumbbell"
+            android:contentDescription="Profile photo" />
+
+        <!-- Hint: tapping the photo opens the camera -->
         <TextView
-            android:id="@+id/tvAppTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="8dp"
+            android:text="📷  Tap photo to take a new one"
+            android:textColor="@color/text_muted"
+            android:textSize="12sp" />
+
+        <!-- Personalized welcome for the signed-in user -->
+        <TextView
+            android:id="@+id/tvWelcome"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="64dp"
+            android:layout_marginTop="18dp"
             android:gravity="center"
-            android:text="GymFlow"
-            android:textColor="#FFFFFF"
-            android:textSize="38sp"
+            android:text="Welcome!"
+            android:textColor="@color/text_primary"
+            android:textSize="24sp"
             android:textStyle="bold" />
 
         <!-- Subtitle -->
@@ -29,46 +52,49 @@
             android:layout_width="280dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="6dp"
             android:gravity="center"
             android:text="Train smarter. Track progress. Stay consistent."
-            android:textColor="#9E9E9E"
-            android:textSize="16sp" />
+            android:textColor="@color/text_secondary"
+            android:textSize="15sp" />
 
-        <!-- Dumbbell Emoji Visual -->
+        <!-- Motivation banner image, loaded from the web with Glide
+             (3rd-party library) and rounded with a Glide transformation -->
         <ImageView
-            android:id="@+id/imgDumbbell"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:layout_marginTop="20dp"
-            android:layout_gravity="center"
-            android:src="@drawable/ic_dumbbell"
-            android:contentDescription="Dumbbell Icon"/>
+            android:id="@+id/imgBanner"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:layout_marginTop="24dp"
+            android:scaleType="centerCrop"
+            android:contentDescription="Fitness banner" />
 
-        <!-- Hero panel -->
+        <!-- Daily target card — its text is loaded from Firestore
+             (config/dailyTarget), so it can be changed without an app update -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="28dp"
+            android:layout_marginTop="16dp"
             android:background="@drawable/screen_panel_bg"
             android:orientation="vertical"
             android:padding="20dp">
 
             <TextView
+                android:id="@+id/tvTargetTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Today’s Target"
                 android:layout_gravity="center"
-                android:textColor="#FFFFFF"
+                android:text="🎯  Today's Target"
+                android:textColor="@color/text_primary"
                 android:textSize="20sp"
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/tvTargetSubtitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:layout_gravity="center"
-                android:text="Complete one set of exercises"
+                android:text="Loading..."
                 android:textColor="#BDBDBD"
                 android:textSize="15sp" />
 
@@ -79,12 +105,13 @@
             android:id="@+id/btnViewWorkouts"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:layout_marginTop="28dp"
+            android:layout_marginTop="24dp"
             android:background="@drawable/primary_button_bg"
             android:text="View Workouts"
             android:textAllCaps="false"
-            android:textColor="#FFFFFF"
-            android:textSize="17sp" />
+            android:textColor="@color/text_primary"
+            android:textSize="17sp"
+            android:textStyle="bold" />
 
         <!-- Secondary Action -->
         <Button
@@ -95,44 +122,23 @@
             android:background="@drawable/secondary_button_bg"
             android:text="View Progress"
             android:textAllCaps="false"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/text_primary"
             android:textSize="17sp" />
 
-        <!-- Crash Action -->
+        <!-- Sign Out — quiet text-style button so it doesn't compete
+             with the main actions -->
         <Button
-            android:id="@+id/btnCrash"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginTop="14dp"
-            android:background="@drawable/secondary_button_bg"
-            android:text="Test Crash"
+            android:id="@+id/btnSignOut"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="18dp"
+            android:layout_marginBottom="24dp"
+            android:background="@android:color/transparent"
+            android:text="Sign Out"
             android:textAllCaps="false"
-            android:textColor="#FFFFFF"
-            android:textSize="17sp" />
-
-        <!-- Firestore Save Action -->
-        <Button
-            android:id="@+id/btnSaveData"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginTop="14dp"
-            android:background="@drawable/secondary_button_bg"
-            android:text="Save Workout to Firestore"
-            android:textAllCaps="false"
-            android:textColor="#FFFFFF"
-            android:textSize="17sp" />
-
-        <!-- Firestore Read Action -->
-        <Button
-            android:id="@+id/btnReadData"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginTop="14dp"
-            android:background="@drawable/secondary_button_bg"
-            android:text="Read Workouts from Firestore"
-            android:textAllCaps="false"
-            android:textColor="#FFFFFF"
-            android:textSize="17sp" />
+            android:textColor="@color/text_muted"
+            android:textSize="15sp" />
 
     </LinearLayout>
 
