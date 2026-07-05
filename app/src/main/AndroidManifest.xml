@@ -2,7 +2,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Camera is used to take a custom profile photo. required="false" means
+         the app can still be installed on devices without a camera. -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
 
     <application
         android:allowBackup="true"
@@ -18,9 +26,11 @@
         <activity android:name=".ProgressActivity" />
         <activity android:name=".WorkoutDetailActivity" />
         <activity android:name=".WorkoutCategoriesActivity" />
+        <activity android:name=".MainActivity" />
 
+        <!-- Login is now the launcher / entry point of the app -->
         <activity
-            android:name=".MainActivity"
+            android:name=".LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
