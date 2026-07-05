@@ -4,9 +4,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.CenterCrop
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 
 class ExerciseAdapter(
     private val exercises: MutableList<Exercise>,
@@ -16,6 +20,7 @@ class ExerciseAdapter(
     // Holds references to the views inside each RecyclerView item
     class ExerciseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val cardContainer: LinearLayout = itemView.findViewById(R.id.cardContainer)
+        val imgExercise: ImageView = itemView.findViewById(R.id.imgExercise)
         val tvExerciseName: TextView = itemView.findViewById(R.id.tvExerciseName)
         val tvExerciseSubtitle: TextView = itemView.findViewById(R.id.tvExerciseSubtitle)
         val tvExerciseSets: TextView = itemView.findViewById(R.id.tvExerciseSets)
@@ -37,6 +42,22 @@ class ExerciseAdapter(
         holder.tvExerciseName.text = exercise.name
         holder.tvExerciseSets.text = "Sets: ${exercise.sets}"
         holder.tvExerciseReps.text = "Reps: ${exercise.reps}"
+
+        // Load the exercise demo image from Firestore's URL with Glide.
+        // Cards without an image simply don't show the image area.
+        if (exercise.imageUrl.isNotEmpty()) {
+            holder.imgExercise.visibility = View.VISIBLE
+            val radius = holder.itemView.resources
+                .getDimensionPixelSize(R.dimen.exercise_image_corner_radius)
+            Glide.with(holder.imgExercise)
+                .load(exercise.imageUrl)
+                .transform(CenterCrop(), RoundedCorners(radius))
+                .placeholder(R.drawable.exercise_card_default)
+                .error(R.drawable.exercise_card_default)
+                .into(holder.imgExercise)
+        } else {
+            holder.imgExercise.visibility = View.GONE
+        }
 
         // Small helper subtitle for better UI polish
         holder.tvExerciseSubtitle.text = if (exercise.isCompleted) {

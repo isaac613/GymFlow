@@ -171,6 +171,9 @@ class MainActivity : AppCompatActivity() {
         // Seed the workout plan into Firestore on first run (no-op afterwards).
         // All app data lives in Firestore — nothing is hardcoded at runtime.
         WorkoutRepository.seedDatabaseIfEmpty()
+
+        // Backfill demo images for exercises created before images existed
+        WorkoutRepository.ensureExerciseImages()
     }
 
     // Shows the saved camera photo if one exists, otherwise the Google photo

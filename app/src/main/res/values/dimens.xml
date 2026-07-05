@@ -2,4 +2,7 @@
 <resources>
     <!-- Corner radius used by Glide when rounding the home banner image -->
     <dimen name="banner_corner_radius">20dp</dimen>
+
+    <!-- Corner radius for the exercise demo images inside cards -->
+    <dimen name="exercise_image_corner_radius">14dp</dimen>
 </resources>

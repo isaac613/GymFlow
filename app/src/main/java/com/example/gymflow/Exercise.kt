@@ -9,5 +9,6 @@ data class Exercise(
     val reps: Int = 0,
     val category: String = "",
     val order: Int = 0,
+    val imageUrl: String = "",
     var isCompleted: Boolean = false
 )

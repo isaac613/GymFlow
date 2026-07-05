@@ -51,6 +51,59 @@ object WorkoutRepository {
         )
     )
 
+    // Demo image for each exercise, served from the free-exercise-db project
+    // (MIT licensed). Stored in Firestore per exercise, loaded with Glide.
+    private const val IMAGE_BASE =
+        "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises"
+
+    private val exerciseImages = mapOf(
+        "Bench Press" to "$IMAGE_BASE/Barbell_Bench_Press_-_Medium_Grip/0.jpg",
+        "Pull Ups" to "$IMAGE_BASE/Pullups/0.jpg",
+        "Shoulder Press" to "$IMAGE_BASE/Barbell_Shoulder_Press/0.jpg",
+        "Bicep Curls" to "$IMAGE_BASE/Barbell_Curl/0.jpg",
+        "Squats" to "$IMAGE_BASE/Barbell_Squat/0.jpg",
+        "Leg Press" to "$IMAGE_BASE/Leg_Press/0.jpg",
+        "Romanian Deadlift" to "$IMAGE_BASE/Romanian_Deadlift/0.jpg",
+        "Calf Raises" to "$IMAGE_BASE/Standing_Calf_Raises/0.jpg",
+        "Incline Dumbbell Press" to "$IMAGE_BASE/Incline_Dumbbell_Press/0.jpg",
+        "Tricep Pushdown" to "$IMAGE_BASE/Triceps_Pushdown/0.jpg",
+        "Deadlift" to "$IMAGE_BASE/Barbell_Deadlift/0.jpg",
+        "Lat Pulldown" to "$IMAGE_BASE/Wide-Grip_Lat_Pulldown/0.jpg",
+        "Seated Row" to "$IMAGE_BASE/Seated_Cable_Rows/0.jpg",
+        "Hammer Curl" to "$IMAGE_BASE/Hammer_Curls/0.jpg",
+        "Plank" to "$IMAGE_BASE/Plank/0.jpg",
+        "Leg Raises" to "$IMAGE_BASE/Flat_Bench_Lying_Leg_Raise/0.jpg",
+        "Russian Twists" to "$IMAGE_BASE/Russian_Twist/0.jpg",
+        "Cable Crunch" to "$IMAGE_BASE/Cable_Crunch/0.jpg"
+    )
+
+    // Adds the imageUrl field to any exercise document that doesn't have one
+    // yet. Safe to call on every app start: it only writes when something is
+    // missing, so already-migrated databases are untouched.
+    fun ensureExerciseImages() {
+        db.collection("exercises").get()
+            .addOnSuccessListener { snapshot ->
+                val batch = db.batch()
+                var updates = 0
+
+                for (doc in snapshot.documents) {
+                    if (doc.getString("imageUrl").isNullOrEmpty()) {
+                        val url = exerciseImages[doc.getString("name")]
+                        if (url != null) {
+                            batch.update(doc.reference, "imageUrl", url)
+                            updates++
+                        }
+                    }
+                }
+
+                if (updates > 0) {
+                    batch.commit()
+                    Log.d(TAG, "Added images to $updates exercises")
+                }
+            }
+            .addOnFailureListener { e -> Log.w(TAG, "Could not check exercise images", e) }
+    }
+
     // Makes sure the daily target document exists, then hands its text to the
     // caller. The text lives in Firestore (config/dailyTarget) so it can be
     // changed from the Firebase console without releasing a new app version.
@@ -110,7 +163,8 @@ object WorkoutRepository {
                                 "sets" to exercise.sets,
                                 "reps" to exercise.reps,
                                 "category" to categoryName,
-                                "order" to exerciseIndex
+                                "order" to exerciseIndex,
+                                "imageUrl" to (exerciseImages[exercise.name] ?: "")
                             )
                         )
                     }
