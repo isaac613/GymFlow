@@ -27,6 +27,7 @@
         android:textColor="#9E9E9E"
         android:textSize="14sp" />
 
+    <!-- Sets / reps shown as small pill chips -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -35,22 +36,30 @@
 
         <TextView
             android:id="@+id/tvExerciseSets"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:background="@drawable/chip_bg"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
             android:text="Sets: 4"
             android:textColor="#D3D3D3"
-            android:textSize="16sp" />
+            android:textSize="14sp" />
 
         <TextView
             android:id="@+id/tvExerciseReps"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="end"
+            android:layout_marginStart="10dp"
+            android:background="@drawable/chip_bg"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
             android:text="Reps: 10"
             android:textColor="#D3D3D3"
-            android:textSize="16sp" />
+            android:textSize="14sp" />
     </LinearLayout>
 
     <Button

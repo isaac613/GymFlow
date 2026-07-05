@@ -1,10 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- GymFlow color palette. Every screen pulls from these named colors so the
+     look stays consistent and re-theming the app means editing one file. -->
 <resources>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
+    <!-- Base surfaces -->
+    <color name="background">#121212</color>
+    <color name="surface">#1A1A1A</color>
+    <color name="surface_light">#1E1E1E</color>
+    <color name="surface_stroke">#2B2B2B</color>
+
+    <!-- Brand accent (green) -->
+    <color name="accent">#2ECC71</color>
+    <color name="accent_dark">#1E8449</color>
+    <color name="accent_deep">#145A32</color>
+
+    <!-- Text -->
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#9E9E9E</color>
+    <color name="text_muted">#757575</color>
+    <color name="text_on_accent">#EAFBF1</color>
+
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 </resources>
