@@ -2,6 +2,7 @@ package com.example.gymflow
 
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
@@ -104,31 +105,35 @@ object WorkoutRepository {
             .addOnFailureListener { e -> Log.w(TAG, "Could not check exercise images", e) }
     }
 
-    // Makes sure the daily target document exists, then hands its text to the
-    // caller. The text lives in Firestore (config/dailyTarget) so it can be
-    // changed from the Firebase console without releasing a new app version.
-    fun loadDailyTarget(onLoaded: (title: String, subtitle: String) -> Unit) {
+    // Watches the daily target document with a real-time listener and hands
+    // its text to the caller on every change. The text lives in Firestore
+    // (config/dailyTarget), so editing it in the Firebase console updates the
+    // home screen instantly — no app release needed. Returns the listener
+    // registration so the caller can remove it when its screen closes.
+    fun listenToDailyTarget(
+        onLoaded: (title: String, subtitle: String) -> Unit
+    ): ListenerRegistration {
         val defaultTitle = "🎯  Today's Target"
         val defaultSubtitle = "Complete one set of exercises"
 
         val targetDoc = db.collection("config").document("dailyTarget")
-        targetDoc.get()
-            .addOnSuccessListener { doc ->
-                if (doc.exists()) {
-                    onLoaded(
-                        doc.getString("title") ?: defaultTitle,
-                        doc.getString("subtitle") ?: defaultSubtitle
-                    )
-                } else {
-                    // First run against this database — create the document
-                    // with defaults so it can be edited in the console later
-                    targetDoc.set(
-                        mapOf("title" to defaultTitle, "subtitle" to defaultSubtitle)
-                    )
-                    onLoaded(defaultTitle, defaultSubtitle)
-                }
+        return targetDoc.addSnapshotListener { doc, error ->
+            if (error != null) {
+                Log.w(TAG, "Daily target listener failed", error)
+                return@addSnapshotListener
             }
-            .addOnFailureListener { e -> Log.w(TAG, "Could not load daily target", e) }
+            if (doc != null && doc.exists()) {
+                onLoaded(
+                    doc.getString("title") ?: defaultTitle,
+                    doc.getString("subtitle") ?: defaultSubtitle
+                )
+            } else if (doc != null) {
+                // First run against this database — create the document with
+                // defaults; the listener fires again once the write lands
+                targetDoc.set(mapOf("title" to defaultTitle, "subtitle" to defaultSubtitle))
+                onLoaded(defaultTitle, defaultSubtitle)
+            }
+        }
     }
 
     // Uploads the default plan to Firestore, but only if the database is empty.

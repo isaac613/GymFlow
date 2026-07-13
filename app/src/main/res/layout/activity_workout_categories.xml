@@ -40,8 +40,29 @@
             android:textAllCaps="false"
             android:textColor="#FFFFFF" />
 
-        <!-- Category buttons are created dynamically from Firestore data.
-             See WorkoutCategoriesActivity.loadCategoriesFromFirestore(). -->
+        <!-- Spinner shown while the categories load from Firestore -->
+        <ProgressBar
+            android:id="@+id/pbLoadingCategories"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="40dp"
+            android:indeterminateTint="@color/accent" />
+
+        <!-- Friendly empty state if the database has no categories -->
+        <TextView
+            android:id="@+id/tvNoCategories"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
+            android:gravity="center"
+            android:text="No workout categories yet.\nAdd some in the Firebase console!"
+            android:textColor="@color/text_secondary"
+            android:textSize="15sp"
+            android:visibility="gone" />
+
+        <!-- Category cards are created dynamically from Firestore data.
+             See WorkoutCategoriesActivity. -->
         <LinearLayout
             android:id="@+id/categoriesContainer"
             android:layout_width="match_parent"

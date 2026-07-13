@@ -6,16 +6,22 @@ import android.graphics.Typeface
 import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
+import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.firestore.ListenerRegistration
 
 // Lists the workout categories. The categories are loaded from Firestore
 // and the cards are created dynamically — nothing here is static, so new
 // categories can be added straight from the Firebase console.
 class WorkoutCategoriesActivity : AppCompatActivity() {
+
+    // Live listener on the categories collection, removed in onDestroy
+    private var categoriesListener: ListenerRegistration? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,15 +38,26 @@ class WorkoutCategoriesActivity : AppCompatActivity() {
         loadCategoriesFromFirestore()
     }
 
-    // Reads the categories and the exercise counts, then builds one card
-    // per category. Two async reads, chained: categories first, then
-    // exercises (to show "N exercises" on each card).
+    // Live listener on the categories collection: the screen rebuilds itself
+    // whenever the plan changes (even for edits made in the Firebase console).
+    // The exercise counts are re-read on each change to keep the cards fresh.
     private fun loadCategoriesFromFirestore() {
         val container = findViewById<LinearLayout>(R.id.categoriesContainer)
+        val spinner = findViewById<ProgressBar>(R.id.pbLoadingCategories)
+        val emptyState = findViewById<TextView>(R.id.tvNoCategories)
         val db = WorkoutRepository.db
 
-        db.collection("categories").get()
-            .addOnSuccessListener { categorySnapshot ->
+        categoriesListener = db.collection("categories")
+            .addSnapshotListener { categorySnapshot, error ->
+                if (error != null) {
+                    Log.w(TAG, "Categories listener failed", error)
+                    Toast.makeText(
+                        this, "Could not load categories: ${error.message}", Toast.LENGTH_LONG
+                    ).show()
+                    return@addSnapshotListener
+                }
+                if (categorySnapshot == null) return@addSnapshotListener
+
                 // Keep the plan's intended order
                 val categories = categorySnapshot.documents
                     .sortedBy { it.getLong("order") ?: 0L }
@@ -55,17 +72,16 @@ class WorkoutCategoriesActivity : AppCompatActivity() {
                             countPerCategory[category] = (countPerCategory[category] ?: 0) + 1
                         }
 
+                        spinner.visibility = View.GONE
+                        emptyState.visibility =
+                            if (categories.isEmpty()) View.VISIBLE else View.GONE
+
                         container.removeAllViews()
                         for (categoryName in categories) {
                             val count = countPerCategory[categoryName] ?: 0
                             container.addView(buildCategoryCard(categoryName, count))
                         }
                     }
-            }
-            .addOnFailureListener { e ->
-                Log.w(TAG, "Failed to load categories", e)
-                Toast.makeText(this, "Could not load categories: ${e.message}", Toast.LENGTH_LONG)
-                    .show()
             }
     }
 
@@ -152,6 +168,12 @@ class WorkoutCategoriesActivity : AppCompatActivity() {
         val intent = Intent(this, WorkoutDetailActivity::class.java)
         intent.putExtra("category", category)
         startActivity(intent)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Stop the live listener when the screen closes
+        categoriesListener?.remove()
     }
 
     companion object {

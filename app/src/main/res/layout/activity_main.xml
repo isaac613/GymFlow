@@ -46,6 +46,18 @@
             android:textSize="24sp"
             android:textStyle="bold" />
 
+        <!-- Workout streak, computed from the user's history in Firestore -->
+        <TextView
+            android:id="@+id/tvStreak"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:gravity="center"
+            android:text=""
+            android:textColor="@color/accent"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
         <!-- Subtitle -->
         <TextView
             android:id="@+id/tvSubtitle"

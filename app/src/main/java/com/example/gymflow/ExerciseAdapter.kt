@@ -66,14 +66,15 @@ class ExerciseAdapter(
             "Tap below when finished"
         }
 
-        // Change appearance depending on completion state
+        // Change appearance depending on completion state.
+        // The button stays enabled when completed so users can undo a
+        // mistaken tap — pressing it again un-completes the exercise.
         if (exercise.isCompleted) {
 
             holder.cardContainer.setBackgroundResource(R.drawable.exercise_card_completed)
 
-            holder.btnCompleteExercise.text = "✓ Completed"
+            holder.btnCompleteExercise.text = "✓ Completed — tap to undo"
             holder.btnCompleteExercise.setBackgroundResource(R.drawable.exercise_button_done)
-            holder.btnCompleteExercise.isEnabled = false
 
         } else {
 
@@ -81,7 +82,6 @@ class ExerciseAdapter(
 
             holder.btnCompleteExercise.text = "Complete Exercise"
             holder.btnCompleteExercise.setBackgroundResource(R.drawable.exercise_button_active)
-            holder.btnCompleteExercise.isEnabled = true
         }
 
         holder.btnCompleteExercise.setOnClickListener {

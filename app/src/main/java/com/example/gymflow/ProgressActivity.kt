@@ -2,19 +2,32 @@ package com.example.gymflow
 
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.Query
+import java.text.SimpleDateFormat
+import java.util.Locale
 
-// Progress dashboard. All numbers are computed live from Firestore:
-// - the workout plan (exercises collection) gives the totals
-// - the signed-in user's progress documents give the completed counts
+// Progress dashboard. All numbers are computed live from Firestore using
+// snapshot listeners — complete an exercise on another screen (or edit the
+// database in the Firebase console) and this dashboard updates by itself.
 class ProgressActivity : AppCompatActivity() {
 
     private lateinit var uid: String
     private val db get() = WorkoutRepository.db
+
+    // Latest snapshots from the two listeners; dashboard refills when either fires
+    private var totalPerCategory: Map<String, Int>? = null
+    private var completedPerCategory: Map<String, Int>? = null
+    private var categoriesStarted = 0
+
+    private val listeners = mutableListOf<ListenerRegistration>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,76 +42,142 @@ class ProgressActivity : AppCompatActivity() {
         uid = user.uid
 
         // Top navigation
-        val btnBackHome = findViewById<Button>(R.id.btnBackHomeFromProgress)
-        btnBackHome.setOnClickListener {
+        findViewById<Button>(R.id.btnBackHomeFromProgress).setOnClickListener {
             finish()
         }
 
-        loadProgressFromFirestore()
+        listenToPlan()
+        listenToProgress()
+        listenToHistory()
     }
 
-    // Loads the workout plan and the user's progress, then fills the dashboard.
-    // Two async reads: first the full exercise plan, then this user's progress.
-    private fun loadProgressFromFirestore() {
-        db.collection("exercises").get()
-            .addOnSuccessListener { exerciseSnapshot ->
-                // How many exercises exist in each category (from the plan)
-                val totalPerCategory = mutableMapOf<String, Int>()
-                for (doc in exerciseSnapshot.documents) {
-                    val category = doc.getString("category") ?: continue
-                    totalPerCategory[category] = (totalPerCategory[category] ?: 0) + 1
+    // Live listener on the workout plan — gives the totals per category
+    private fun listenToPlan() {
+        val registration = db.collection("exercises")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.w(TAG, "Plan listener failed", error)
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    val totals = mutableMapOf<String, Int>()
+                    for (doc in snapshot.documents) {
+                        val category = doc.getString("category") ?: continue
+                        totals[category] = (totals[category] ?: 0) + 1
+                    }
+                    totalPerCategory = totals
+                    fillDashboardIfReady()
+                }
+            }
+        listeners.add(registration)
+    }
+
+    // Live listener on this user's progress documents (one per category)
+    private fun listenToProgress() {
+        val registration = db.collection("users").document(uid).collection("progress")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.w(TAG, "Progress listener failed", error)
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    val completed = mutableMapOf<String, Int>()
+                    var started = 0
+
+                    for (doc in snapshot.documents) {
+                        val completedList =
+                            doc.get("completedExercises") as? List<*> ?: emptyList<Any>()
+                        completed[doc.id] = completedList.size
+                        if (doc.getBoolean("started") == true) started++
+                    }
+
+                    completedPerCategory = completed
+                    categoriesStarted = started
+                    fillDashboardIfReady()
+                }
+            }
+        listeners.add(registration)
+    }
+
+    // Live feed of the user's five most recent completions
+    private fun listenToHistory() {
+        val container = findViewById<LinearLayout>(R.id.historyContainer)
+        val timeFormat = SimpleDateFormat("MMM d, HH:mm", Locale.US)
+
+        val registration = db.collection("users").document(uid).collection("history")
+            .orderBy("completedAt", Query.Direction.DESCENDING)
+            .limit(5)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.w(TAG, "History listener failed", error)
+                    return@addSnapshotListener
+                }
+                if (snapshot == null) return@addSnapshotListener
+
+                container.removeAllViews()
+
+                if (snapshot.isEmpty) {
+                    container.addView(buildHistoryRow(
+                        "No activity yet — complete an exercise to see it here!", ""
+                    ))
+                    return@addSnapshotListener
                 }
 
-                // Now read this user's progress documents (one per category)
-                db.collection("users").document(uid).collection("progress").get()
-                    .addOnSuccessListener { progressSnapshot ->
-                        val completedPerCategory = mutableMapOf<String, Int>()
-                        var categoriesStarted = 0
+                for (doc in snapshot.documents) {
+                    val exercise = doc.getString("exercise") ?: continue
+                    val category = doc.getString("category") ?: ""
+                    // serverTimestamp is briefly null while the write is pending
+                    val time = doc.getTimestamp("completedAt")?.toDate()
+                    val timeText = if (time != null) timeFormat.format(time) else "just now"
 
-                        for (doc in progressSnapshot.documents) {
-                            val completedList =
-                                doc.get("completedExercises") as? List<*> ?: emptyList<Any>()
-                            completedPerCategory[doc.id] = completedList.size
-
-                            if (doc.getBoolean("started") == true) {
-                                categoriesStarted++
-                            }
-                        }
-
-                        fillDashboard(totalPerCategory, completedPerCategory, categoriesStarted)
-                    }
+                    container.addView(buildHistoryRow("✅ $exercise — $category", timeText))
+                }
             }
-            .addOnFailureListener { e ->
-                Log.w(TAG, "Failed to load progress", e)
-            }
-
-        // Recent activity comes from the user's own document
-        db.collection("users").document(uid).get()
-            .addOnSuccessListener { userDoc ->
-                val lastExercise =
-                    userDoc.getString("lastCompletedExercise") ?: "No exercise completed yet"
-                val lastCategory =
-                    userDoc.getString("lastCompletedCategory") ?: "No category yet"
-
-                findViewById<TextView>(R.id.tvLastCompletedExercise).text =
-                    "Last completed: $lastExercise"
-                findViewById<TextView>(R.id.tvMostActiveCategory).text =
-                    "Most recent category: $lastCategory"
-            }
+        listeners.add(registration)
     }
 
-    // Fills every section of the dashboard from the computed numbers
-    private fun fillDashboard(
-        totalPerCategory: Map<String, Int>,
-        completedPerCategory: Map<String, Int>,
-        categoriesStarted: Int
-    ) {
-        val totalPossibleExercises = totalPerCategory.values.sum()
-        val totalCompleted = completedPerCategory.values.sum()
+    // Builds one row of the recent-activity feed
+    private fun buildHistoryRow(mainText: String, timeText: String): LinearLayout {
+        val density = resources.displayMetrics.density
+        val row = LinearLayout(this)
+        row.orientation = LinearLayout.VERTICAL
+        val params = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+        params.topMargin = (10 * density).toInt()
+        row.layoutParams = params
+
+        val tvMain = TextView(this)
+        tvMain.text = mainText
+        tvMain.setTextColor(getColor(R.color.text_primary))
+        tvMain.textSize = 15f
+        row.addView(tvMain)
+
+        if (timeText.isNotEmpty()) {
+            val tvTime = TextView(this)
+            tvTime.text = timeText
+            tvTime.setTextColor(getColor(R.color.text_muted))
+            tvTime.textSize = 12f
+            row.addView(tvTime)
+        }
+
+        return row
+    }
+
+    // Refills the dashboard once both listeners have delivered data
+    private fun fillDashboardIfReady() {
+        val totals = totalPerCategory ?: return
+        val completed = completedPerCategory ?: return
+
+        findViewById<ProgressBar>(R.id.pbDashboardLoading).visibility = View.GONE
+
+        val totalPossibleExercises = totals.values.sum()
+        val totalCompleted = completed.values.sum()
 
         // A category counts as a finished workout when all its exercises are done
-        val workoutsFinished = totalPerCategory.count { (category, total) ->
-            total > 0 && (completedPerCategory[category] ?: 0) == total
+        val workoutsFinished = totals.count { (category, total) ->
+            total > 0 && (completed[category] ?: 0) == total
         }
 
         val overallPercent = if (totalPossibleExercises == 0) {
@@ -121,26 +200,11 @@ class ProgressActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.tvWorkoutsFinishedValue).text = workoutsFinished.toString()
 
         // Category breakdown rows
-        updateCategorySection(
-            "Upper Body", R.id.tvUpperBodyValue, R.id.pbUpperBody,
-            totalPerCategory, completedPerCategory
-        )
-        updateCategorySection(
-            "Lower Body", R.id.tvLowerBodyValue, R.id.pbLowerBody,
-            totalPerCategory, completedPerCategory
-        )
-        updateCategorySection(
-            "Push", R.id.tvPushValue, R.id.pbPush,
-            totalPerCategory, completedPerCategory
-        )
-        updateCategorySection(
-            "Pull", R.id.tvPullValue, R.id.pbPull,
-            totalPerCategory, completedPerCategory
-        )
-        updateCategorySection(
-            "Core", R.id.tvCoreValue, R.id.pbCore,
-            totalPerCategory, completedPerCategory
-        )
+        updateCategorySection("Upper Body", R.id.tvUpperBodyValue, R.id.pbUpperBody, totals, completed)
+        updateCategorySection("Lower Body", R.id.tvLowerBodyValue, R.id.pbLowerBody, totals, completed)
+        updateCategorySection("Push", R.id.tvPushValue, R.id.pbPush, totals, completed)
+        updateCategorySection("Pull", R.id.tvPullValue, R.id.pbPull, totals, completed)
+        updateCategorySection("Core", R.id.tvCoreValue, R.id.pbCore, totals, completed)
     }
 
     // Updates one row in the category breakdown section
@@ -159,6 +223,12 @@ class ProgressActivity : AppCompatActivity() {
         val progressBar = findViewById<ProgressBar>(progressBarId)
         progressBar.max = if (total > 0) total else 1
         progressBar.progress = completed
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Stop the live listeners when the screen closes
+        listeners.forEach { it.remove() }
     }
 
     companion object {

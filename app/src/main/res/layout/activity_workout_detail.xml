@@ -36,11 +36,44 @@
         android:textAllCaps="false"
         android:textColor="#FFFFFF" />
 
+    <!-- Session actions: add a custom exercise / reset this workout -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnAddExercise"
+            android:layout_width="0dp"
+            android:layout_height="46dp"
+            android:layout_marginEnd="6dp"
+            android:layout_weight="1"
+            android:background="@drawable/primary_button_bg"
+            android:text="＋ Add Exercise"
+            android:textAllCaps="false"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp" />
+
+        <Button
+            android:id="@+id/btnResetWorkout"
+            android:layout_width="0dp"
+            android:layout_height="46dp"
+            android:layout_marginStart="6dp"
+            android:layout_weight="1"
+            android:background="@drawable/secondary_button_bg"
+            android:text="Reset Workout"
+            android:textAllCaps="false"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp" />
+
+    </LinearLayout>
+
     <!-- Progress panel -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="18dp"
+        android:layout_marginTop="12dp"
         android:background="@drawable/screen_panel_bg"
         android:orientation="vertical"
         android:padding="18dp">
@@ -61,13 +94,46 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:progressTint="@color/accent" />
+
+        <!-- Rest countdown, shown after completing an exercise -->
+        <TextView
+            android:id="@+id/tvRestTimer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="⏱ Rest: 60s"
+            android:textColor="@color/accent"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
     </LinearLayout>
+
+    <!-- Spinner shown while the exercises load from Firestore -->
+    <ProgressBar
+        android:id="@+id/pbLoadingExercises"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="40dp"
+        android:indeterminateTint="@color/accent" />
+
+    <!-- Friendly empty state when a category has no exercises yet -->
+    <TextView
+        android:id="@+id/tvEmptyState"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:gravity="center"
+        android:text="No exercises here yet.\nTap “＋ Add Exercise” to create one!"
+        android:textColor="@color/text_secondary"
+        android:textSize="15sp"
+        android:visibility="gone" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewExercises"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="18dp"
+        android:layout_marginTop="14dp"
         android:layout_weight="1" />
 
 </LinearLayout>

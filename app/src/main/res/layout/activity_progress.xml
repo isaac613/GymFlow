@@ -39,6 +39,15 @@
             android:textAllCaps="false"
             android:textColor="#FFFFFF" />
 
+        <!-- Spinner shown while the dashboard numbers load from Firestore -->
+        <ProgressBar
+            android:id="@+id/pbDashboardLoading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="24dp"
+            android:indeterminateTint="@color/accent" />
+
         <!-- Hero analytics card -->
         <LinearLayout
             android:layout_width="match_parent"
@@ -351,23 +360,14 @@
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/tvLastCompletedExercise"
-                android:layout_width="wrap_content"
+            <!-- Rows are added dynamically from the user's workout history
+                 (users/{uid}/history). See ProgressActivity. -->
+            <LinearLayout
+                android:id="@+id/historyContainer"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:text="Last completed: None"
-                android:textColor="#D3D3D3"
-                android:textSize="15sp" />
-
-            <TextView
-                android:id="@+id/tvMostActiveCategory"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Most recent category: None"
-                android:textColor="#D3D3D3"
-                android:textSize="15sp" />
+                android:layout_marginTop="6dp"
+                android:orientation="vertical" />
         </LinearLayout>
 
     </LinearLayout>

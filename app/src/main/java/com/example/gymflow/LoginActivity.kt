@@ -12,8 +12,12 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.analytics.ktx.logEvent
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.ktx.Firebase
 
 // Entry point of the app. Handles Google Sign-In through Firebase Authentication.
 // This is our 5th screen and the gatekeeper for the rest of the app.
@@ -21,6 +25,7 @@ class LoginActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
     private lateinit var googleSignInClient: GoogleSignInClient
+    private lateinit var firebaseAnalytics: FirebaseAnalytics
 
     // Launches the Google account picker and receives the result back
     private val signInLauncher = registerForActivityResult(
@@ -44,6 +49,7 @@ class LoginActivity : AppCompatActivity() {
         setContentView(R.layout.activity_login)
 
         auth = FirebaseAuth.getInstance()
+        firebaseAnalytics = Firebase.analytics
 
         // Configure Google Sign-In to request the ID token (needed for Firebase)
         // and the user's email. default_web_client_id is generated automatically
@@ -102,6 +108,10 @@ class LoginActivity : AppCompatActivity() {
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
+                    // Analytics: record which sign-in method was used
+                    firebaseAnalytics.logEvent(FirebaseAnalytics.Event.LOGIN) {
+                        param(FirebaseAnalytics.Param.METHOD, "email")
+                    }
                     Toast.makeText(this, "Welcome back!", Toast.LENGTH_SHORT).show()
                     goToHome()
                 } else {
@@ -120,6 +130,10 @@ class LoginActivity : AppCompatActivity() {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
+                    // Analytics: record the new registration
+                    firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SIGN_UP) {
+                        param(FirebaseAnalytics.Param.METHOD, "email")
+                    }
                     Toast.makeText(this, "Account created — welcome!", Toast.LENGTH_SHORT).show()
                     goToHome()
                 } else {
@@ -152,6 +166,10 @@ class LoginActivity : AppCompatActivity() {
         auth.signInWithCredential(credential)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
+                    // Analytics: record which sign-in method was used
+                    firebaseAnalytics.logEvent(FirebaseAnalytics.Event.LOGIN) {
+                        param(FirebaseAnalytics.Param.METHOD, "google")
+                    }
                     val name = auth.currentUser?.displayName ?: "athlete"
                     Toast.makeText(this, "Welcome, $name!", Toast.LENGTH_SHORT).show()
                     goToHome()

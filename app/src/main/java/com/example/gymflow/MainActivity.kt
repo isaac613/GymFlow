@@ -22,8 +22,12 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.ktx.Firebase
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 // Home screen. Requires a signed-in user, greets them by name, and lets them
 // take a custom profile photo with the device camera (phone capability).
@@ -36,6 +40,9 @@ class MainActivity : AppCompatActivity() {
 
     // Where the camera will write the photo it takes
     private var currentImageUri: Uri? = null
+
+    // Live listener on the daily target card, removed in onDestroy
+    private var dailyTargetListener: ListenerRegistration? = null
 
     private val db get() = WorkoutRepository.db
 
@@ -159,11 +166,12 @@ class MainActivity : AppCompatActivity() {
             .transform(CenterCrop(), RoundedCorners(resources.getDimensionPixelSize(R.dimen.banner_corner_radius)))
             .into(imgBanner)
 
-        // The daily target text comes from Firestore, not the layout,
-        // so it can be updated without releasing a new app version
+        // The daily target text comes from Firestore via a real-time listener:
+        // edit config/dailyTarget in the Firebase console and the card updates
+        // on screen instantly — no app release needed.
         val tvTargetTitle = findViewById<TextView>(R.id.tvTargetTitle)
         val tvTargetSubtitle = findViewById<TextView>(R.id.tvTargetSubtitle)
-        WorkoutRepository.loadDailyTarget { title, subtitle ->
+        dailyTargetListener = WorkoutRepository.listenToDailyTarget { title, subtitle ->
             tvTargetTitle.text = title
             tvTargetSubtitle.text = subtitle
         }
@@ -174,6 +182,56 @@ class MainActivity : AppCompatActivity() {
 
         // Backfill demo images for exercises created before images existed
         WorkoutRepository.ensureExerciseImages()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Recompute the streak whenever the user comes back to the home screen
+        // (e.g. right after completing exercises in a workout)
+        if (::uid.isInitialized) {
+            loadStreak()
+        }
+    }
+
+    // Reads the user's workout history and counts how many consecutive days
+    // (ending today or yesterday) have at least one completed exercise.
+    private fun loadStreak() {
+        val tvStreak = findViewById<TextView>(R.id.tvStreak)
+        val dayFormat = SimpleDateFormat("yyyyMMdd", Locale.US)
+
+        db.collection("users").document(uid).collection("history").get()
+            .addOnSuccessListener { snapshot ->
+                // Every calendar day on which something was completed
+                val activeDays = snapshot.documents
+                    .mapNotNull { it.getTimestamp("completedAt")?.toDate() }
+                    .map { dayFormat.format(it) }
+                    .toSet()
+
+                // Walk backwards day by day counting the streak. If nothing
+                // was done today yet, an ongoing streak may still end yesterday.
+                val calendar = Calendar.getInstance()
+                if (!activeDays.contains(dayFormat.format(calendar.time))) {
+                    calendar.add(Calendar.DAY_OF_YEAR, -1)
+                }
+
+                var streak = 0
+                while (activeDays.contains(dayFormat.format(calendar.time))) {
+                    streak++
+                    calendar.add(Calendar.DAY_OF_YEAR, -1)
+                }
+
+                tvStreak.text = when {
+                    streak >= 2 -> "🔥 $streak-day streak!"
+                    streak == 1 -> "🔥 1-day streak — come back tomorrow!"
+                    else -> "Complete an exercise to start a streak!"
+                }
+            }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Stop the daily-target listener when the screen closes
+        dailyTargetListener?.remove()
     }
 
     // Shows the saved camera photo if one exists, otherwise the Google photo
