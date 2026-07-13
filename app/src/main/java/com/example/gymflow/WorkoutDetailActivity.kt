@@ -83,9 +83,11 @@ class WorkoutDetailActivity : AppCompatActivity() {
 
         // Set up RecyclerView
         recyclerView.layoutManager = LinearLayoutManager(this)
-        exerciseAdapter = ExerciseAdapter(exercises) { changedExercise ->
-            onExerciseToggled(changedExercise)
-        }
+        exerciseAdapter = ExerciseAdapter(
+            exercises,
+            onExerciseUpdated = { changedExercise -> onExerciseToggled(changedExercise) },
+            onExerciseDeleted = { exercise -> confirmDeleteExercise(exercise) }
+        )
         recyclerView.adapter = exerciseAdapter
 
         findViewById<Button>(R.id.btnBackCategories).setOnClickListener {
@@ -294,6 +296,41 @@ class WorkoutDetailActivity : AppCompatActivity() {
                 }.addOnFailureListener { e ->
                     Toast.makeText(this, "Could not add: ${e.message}", Toast.LENGTH_LONG).show()
                 }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    // Asks for confirmation, then deletes the exercise from Firestore.
+    // Deleting the document makes it disappear from the list instantly via
+    // the live listener (the same delete-from-database pattern as the
+    // contacts app in class).
+    private fun confirmDeleteExercise(exercise: Exercise) {
+        AlertDialog.Builder(this)
+            .setTitle("Remove exercise?")
+            .setMessage("Delete \"${exercise.name}\" from $category?")
+            .setPositiveButton("Delete") { _, _ ->
+                if (exercise.id.isEmpty()) {
+                    Toast.makeText(this, "Can't delete this exercise.", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+
+                db.collection("exercises").document(exercise.id).delete()
+                    .addOnSuccessListener {
+                        Toast.makeText(this, "\"${exercise.name}\" removed.", Toast.LENGTH_SHORT)
+                            .show()
+                    }
+                    .addOnFailureListener { e ->
+                        Toast.makeText(this, "Could not delete: ${e.message}", Toast.LENGTH_LONG)
+                            .show()
+                    }
+
+                // Also drop it from this user's completed list so the progress
+                // counts stay correct
+                progressDoc().set(
+                    mapOf("completedExercises" to FieldValue.arrayRemove(exercise.name)),
+                    SetOptions.merge()
+                )
             }
             .setNegativeButton("Cancel", null)
             .show()

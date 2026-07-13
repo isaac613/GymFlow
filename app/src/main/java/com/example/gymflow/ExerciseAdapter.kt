@@ -14,7 +14,8 @@ import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 
 class ExerciseAdapter(
     private val exercises: MutableList<Exercise>,
-    private val onExerciseUpdated: (Exercise) -> Unit
+    private val onExerciseUpdated: (Exercise) -> Unit,
+    private val onExerciseDeleted: (Exercise) -> Unit
 ) : RecyclerView.Adapter<ExerciseAdapter.ExerciseViewHolder>() {
 
     // Holds references to the views inside each RecyclerView item
@@ -26,6 +27,7 @@ class ExerciseAdapter(
         val tvExerciseSets: TextView = itemView.findViewById(R.id.tvExerciseSets)
         val tvExerciseReps: TextView = itemView.findViewById(R.id.tvExerciseReps)
         val btnCompleteExercise: Button = itemView.findViewById(R.id.btnCompleteExercise)
+        val btnDeleteExercise: TextView = itemView.findViewById(R.id.btnDeleteExercise)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ExerciseViewHolder {
@@ -103,6 +105,11 @@ class ExerciseAdapter(
 
             // Send the changed exercise back to the activity
             onExerciseUpdated(exercise)
+        }
+
+        // Ask the activity to delete this exercise (it shows a confirmation)
+        holder.btnDeleteExercise.setOnClickListener {
+            onExerciseDeleted(exercise)
         }
     }
 
