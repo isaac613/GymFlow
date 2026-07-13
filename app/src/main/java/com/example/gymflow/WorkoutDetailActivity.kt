@@ -280,8 +280,17 @@ class WorkoutDetailActivity : AppCompatActivity() {
                         "order" to planExercises.size,
                         "imageUrl" to ""
                     )
-                ).addOnSuccessListener {
+                ).addOnSuccessListener { docRef ->
                     Toast.makeText(this, "\"$name\" added!", Toast.LENGTH_SHORT).show()
+
+                    // Search the online exercise database for a matching demo
+                    // photo in the background. If one is found, the update
+                    // triggers the live listener and the photo pops in.
+                    WorkoutRepository.findExerciseImage(name) { foundUrl ->
+                        if (foundUrl != null) {
+                            docRef.update("imageUrl", foundUrl)
+                        }
+                    }
                 }.addOnFailureListener { e ->
                     Toast.makeText(this, "Could not add: ${e.message}", Toast.LENGTH_LONG).show()
                 }

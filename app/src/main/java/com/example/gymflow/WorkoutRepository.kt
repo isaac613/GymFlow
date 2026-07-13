@@ -1,10 +1,17 @@
 package com.example.gymflow
 
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import org.json.JSONArray
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.net.URL
+import java.util.concurrent.Executors
 
 // Central helper for Firestore access and one-time database seeding.
 // All workout data (categories + exercises) lives in Firestore — nothing is static.
@@ -79,30 +86,107 @@ object WorkoutRepository {
     )
 
     // Adds the imageUrl field to any exercise document that doesn't have one
-    // yet. Safe to call on every app start: it only writes when something is
-    // missing, so already-migrated databases are untouched.
+    // yet. Known seed exercises use the local map; anything else (e.g. custom
+    // exercises added by users) is looked up in the online exercise database.
+    // Safe to call on every app start: it only writes when something is missing.
     fun ensureExerciseImages() {
         db.collection("exercises").get()
             .addOnSuccessListener { snapshot ->
-                val batch = db.batch()
-                var updates = 0
-
                 for (doc in snapshot.documents) {
-                    if (doc.getString("imageUrl").isNullOrEmpty()) {
-                        val url = exerciseImages[doc.getString("name")]
-                        if (url != null) {
-                            batch.update(doc.reference, "imageUrl", url)
-                            updates++
+                    if (!doc.getString("imageUrl").isNullOrEmpty()) continue
+
+                    val name = doc.getString("name") ?: continue
+                    val knownUrl = exerciseImages[name]
+
+                    if (knownUrl != null) {
+                        doc.reference.update("imageUrl", knownUrl)
+                    } else {
+                        // Not a seed exercise — search the online database
+                        findExerciseImage(name) { foundUrl ->
+                            if (foundUrl != null) {
+                                doc.reference.update("imageUrl", foundUrl)
+                            }
                         }
                     }
                 }
-
-                if (updates > 0) {
-                    batch.commit()
-                    Log.d(TAG, "Added images to $updates exercises")
-                }
             }
             .addOnFailureListener { e -> Log.w(TAG, "Could not check exercise images", e) }
+    }
+
+    // --- Online exercise image search -------------------------------------
+    // free-exercise-db publishes an index of ~870 exercises as one JSON file.
+    // We download it once on a background thread (the web API technique from
+    // class: ExecutorService + Handler), cache it in memory, and match
+    // exercise names against it to find a demo photo for custom exercises.
+
+    private const val EXERCISE_DB_INDEX =
+        "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json"
+
+    private val executor = Executors.newSingleThreadExecutor()
+    private val mainHandler = Handler(Looper.getMainLooper())
+
+    // exercise name -> first image URL, filled on the first lookup
+    private var onlineImageIndex: Map<String, String>? = null
+
+    // Searches the online database for an image matching the exercise name.
+    // Runs on a background thread; the callback is posted to the main thread.
+    fun findExerciseImage(exerciseName: String, onResult: (String?) -> Unit) {
+        executor.execute {
+            try {
+                val index = onlineImageIndex
+                    ?: downloadImageIndex().also { onlineImageIndex = it }
+                val url = matchImage(index, exerciseName)
+                mainHandler.post { onResult(url) }
+            } catch (e: Exception) {
+                Log.w(TAG, "Online image lookup failed", e)
+                mainHandler.post { onResult(null) }
+            }
+        }
+    }
+
+    // Downloads and parses the exercise index (runs on the background thread)
+    private fun downloadImageIndex(): Map<String, String> {
+        val reader = BufferedReader(InputStreamReader(URL(EXERCISE_DB_INDEX).openStream()))
+        val json = StringBuilder()
+        var line: String?
+        while (reader.readLine().also { line = it } != null) {
+            json.append(line)
+        }
+        reader.close()
+
+        val result = mutableMapOf<String, String>()
+        val array = JSONArray(json.toString())
+        for (i in 0 until array.length()) {
+            val exercise = array.getJSONObject(i)
+            val images = exercise.optJSONArray("images")
+            if (images != null && images.length() > 0) {
+                result[exercise.getString("name")] = "$IMAGE_BASE/${images.getString(0)}"
+            }
+        }
+        Log.d(TAG, "Downloaded online exercise index (${result.size} entries)")
+        return result
+    }
+
+    // Lowercases and strips everything except letters/digits, so that
+    // "Push Ups" matches "Pushups" and "push-ups" alike
+    private fun normalize(text: String) = text.lowercase().filter { it.isLetterOrDigit() }
+
+    // Finds the best matching exercise: exact normalized match first,
+    // otherwise the shortest name that contains (or is contained in) the query
+    private fun matchImage(index: Map<String, String>, query: String): String? {
+        val normalizedQuery = normalize(query)
+        if (normalizedQuery.isEmpty()) return null
+
+        index.entries.firstOrNull { normalize(it.key) == normalizedQuery }
+            ?.let { return it.value }
+
+        return index.entries
+            .filter {
+                val name = normalize(it.key)
+                name.contains(normalizedQuery) || normalizedQuery.contains(name)
+            }
+            .minByOrNull { it.key.length }
+            ?.value
     }
 
     // Watches the daily target document with a real-time listener and hands

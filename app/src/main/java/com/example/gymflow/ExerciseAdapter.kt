@@ -44,11 +44,14 @@ class ExerciseAdapter(
         holder.tvExerciseReps.text = "Reps: ${exercise.reps}"
 
         // Load the exercise demo image from Firestore's URL with Glide.
-        // Cards without an image simply don't show the image area.
+        // Cards without an image show a branded dumbbell placeholder instead,
+        // so every card keeps the same shape.
+        val radius = holder.itemView.resources
+            .getDimensionPixelSize(R.dimen.exercise_image_corner_radius)
         if (exercise.imageUrl.isNotEmpty()) {
-            holder.imgExercise.visibility = View.VISIBLE
-            val radius = holder.itemView.resources
-                .getDimensionPixelSize(R.dimen.exercise_image_corner_radius)
+            holder.imgExercise.scaleType = ImageView.ScaleType.CENTER_CROP
+            holder.imgExercise.background = null
+            holder.imgExercise.setPadding(0, 0, 0, 0)
             Glide.with(holder.imgExercise)
                 .load(exercise.imageUrl)
                 .transform(CenterCrop(), RoundedCorners(radius))
@@ -56,7 +59,14 @@ class ExerciseAdapter(
                 .error(R.drawable.exercise_card_default)
                 .into(holder.imgExercise)
         } else {
-            holder.imgExercise.visibility = View.GONE
+            // Cancel any pending image load on this recycled view first
+            Glide.with(holder.imgExercise).clear(holder.imgExercise)
+
+            val padding = (40 * holder.itemView.resources.displayMetrics.density).toInt()
+            holder.imgExercise.scaleType = ImageView.ScaleType.CENTER_INSIDE
+            holder.imgExercise.setBackgroundResource(R.drawable.chip_bg)
+            holder.imgExercise.setPadding(padding, padding, padding, padding)
+            holder.imgExercise.setImageResource(R.drawable.ic_dumbbell)
         }
 
         // Small helper subtitle for better UI polish
