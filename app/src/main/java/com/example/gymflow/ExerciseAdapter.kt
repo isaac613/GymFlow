@@ -28,7 +28,7 @@ class ExerciseAdapter(
         val tvExerciseSets: TextView = itemView.findViewById(R.id.tvExerciseSets)
         val tvExerciseReps: TextView = itemView.findViewById(R.id.tvExerciseReps)
         val btnCompleteExercise: Button = itemView.findViewById(R.id.btnCompleteExercise)
-        val btnDeleteExercise: TextView = itemView.findViewById(R.id.btnDeleteExercise)
+        val btnDeleteExercise: ImageView = itemView.findViewById(R.id.btnDeleteExercise)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ExerciseViewHolder {
