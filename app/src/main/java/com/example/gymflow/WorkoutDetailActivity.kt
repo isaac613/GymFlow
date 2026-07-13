@@ -85,7 +85,10 @@ class WorkoutDetailActivity : AppCompatActivity() {
         recyclerView.layoutManager = LinearLayoutManager(this)
         exerciseAdapter = ExerciseAdapter(
             exercises,
-            currentUid = uid,
+            // Any exercise that isn't part of the built-in plan can be removed
+            canDelete = { exercise ->
+                !WorkoutRepository.isDefaultExercise(exercise.name, exercise.category)
+            },
             onExerciseUpdated = { changedExercise -> onExerciseToggled(changedExercise) },
             onExerciseDeleted = { exercise -> confirmDeleteExercise(exercise) }
         )

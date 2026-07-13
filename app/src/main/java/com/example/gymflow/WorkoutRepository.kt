@@ -171,22 +171,68 @@ object WorkoutRepository {
     // "Push Ups" matches "Pushups" and "push-ups" alike
     private fun normalize(text: String) = text.lowercase().filter { it.isLetterOrDigit() }
 
-    // Finds the best matching exercise: exact normalized match first,
-    // otherwise the shortest name that contains (or is contained in) the query
+    private val stopWords = setOf("the", "with", "and", "for", "your", "from")
+
+    // Splits a name into meaningful lowercase words (3+ letters, no stop words)
+    private fun words(text: String): List<String> =
+        text.lowercase()
+            .split(Regex("[^a-z0-9]+"))
+            .filter { it.length >= 3 && it !in stopWords }
+
+    // True if two words are the same, or one is the simple plural of the other
+    // ("fly"/"flyes", "curl"/"curls"), so word forms still match
+    private fun wordsMatch(a: String, b: String): Boolean {
+        if (a == b) return true
+        return b == a + "s" || b == a + "es" || a == b + "s" || a == b + "es"
+    }
+
+    // Finds the best matching exercise image in three passes, most precise first:
+    //   1. exact name match (ignoring spaces/case)
+    //   2. one name fully contains the other ("Cable Fly" -> "Incline Cable Flye")
+    //   3. shared words ("Pec Fly" -> "Dumbbell Flyes" via the word "fly")
+    // Returns null when nothing meaningful matches, so the card shows the
+    // dumbbell placeholder instead of an unrelated image.
     private fun matchImage(index: Map<String, String>, query: String): String? {
         val normalizedQuery = normalize(query)
         if (normalizedQuery.isEmpty()) return null
 
+        // 1. Exact match
         index.entries.firstOrNull { normalize(it.key) == normalizedQuery }
             ?.let { return it.value }
 
-        return index.entries
+        // 2. One contains the other
+        index.entries
             .filter {
                 val name = normalize(it.key)
                 name.contains(normalizedQuery) || normalizedQuery.contains(name)
             }
             .minByOrNull { it.key.length }
-            ?.value
+            ?.let { return it.value }
+
+        // 3. Word overlap: score each candidate by how many query words it
+        // shares, preferring more shared words then the shortest/closest name
+        val queryWords = words(query)
+        if (queryWords.isEmpty()) return null
+
+        return index.entries
+            .map { entry ->
+                val candidateWords = words(entry.key)
+                val score = queryWords.count { q -> candidateWords.any { wordsMatch(q, it) } }
+                Triple(score, entry.key.length, entry.value)
+            }
+            .filter { it.first > 0 }
+            .minWithOrNull(
+                // highest score first, then shortest name
+                compareByDescending<Triple<Int, Int, String>> { it.first }.thenBy { it.second }
+            )
+            ?.third
+    }
+
+    // True when this exercise is part of the built-in workout plan. Used to
+    // decide whether it can be deleted — the defaults are protected, any
+    // user-added exercise can be removed.
+    fun isDefaultExercise(name: String, category: String): Boolean {
+        return defaultPlan[category]?.any { it.name == name } == true
     }
 
     // Watches the daily target document with a real-time listener and hands
