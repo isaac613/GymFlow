@@ -85,6 +85,7 @@ class WorkoutDetailActivity : AppCompatActivity() {
         recyclerView.layoutManager = LinearLayoutManager(this)
         exerciseAdapter = ExerciseAdapter(
             exercises,
+            currentUid = uid,
             onExerciseUpdated = { changedExercise -> onExerciseToggled(changedExercise) },
             onExerciseDeleted = { exercise -> confirmDeleteExercise(exercise) }
         )
@@ -280,7 +281,8 @@ class WorkoutDetailActivity : AppCompatActivity() {
                         "reps" to reps,
                         "category" to category,
                         "order" to planExercises.size,
-                        "imageUrl" to ""
+                        "imageUrl" to "",
+                        "addedBy" to uid
                     )
                 ).addOnSuccessListener { docRef ->
                     Toast.makeText(this, "\"$name\" added!", Toast.LENGTH_SHORT).show()

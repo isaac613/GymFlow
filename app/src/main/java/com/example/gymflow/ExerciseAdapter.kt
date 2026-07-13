@@ -14,6 +14,7 @@ import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 
 class ExerciseAdapter(
     private val exercises: MutableList<Exercise>,
+    private val currentUid: String,
     private val onExerciseUpdated: (Exercise) -> Unit,
     private val onExerciseDeleted: (Exercise) -> Unit
 ) : RecyclerView.Adapter<ExerciseAdapter.ExerciseViewHolder>() {
@@ -107,9 +108,16 @@ class ExerciseAdapter(
             onExerciseUpdated(exercise)
         }
 
-        // Ask the activity to delete this exercise (it shows a confirmation)
-        holder.btnDeleteExercise.setOnClickListener {
-            onExerciseDeleted(exercise)
+        // Only show the Remove button on exercises this user added themselves.
+        // The built-in workout plan (addedBy is empty) can't be deleted.
+        if (exercise.addedBy.isNotEmpty() && exercise.addedBy == currentUid) {
+            holder.btnDeleteExercise.visibility = View.VISIBLE
+            holder.btnDeleteExercise.setOnClickListener {
+                onExerciseDeleted(exercise)
+            }
+        } else {
+            holder.btnDeleteExercise.visibility = View.GONE
+            holder.btnDeleteExercise.setOnClickListener(null)
         }
     }
 
