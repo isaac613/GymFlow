@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Reusable rounded background for primary buttons -->
+<!-- Reusable rounded background for primary buttons — brand green gradient -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="#2ECC71" />
-    <corners android:radius="16dp" />
+    <gradient
+        android:angle="0"
+        android:startColor="@color/accent"
+        android:endColor="@color/accent_dark" />
+    <corners android:radius="18dp" />
 </shape>

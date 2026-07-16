@@ -236,15 +236,16 @@ object WorkoutRepository {
     }
 
     // Watches the daily target document with a real-time listener and hands
-    // its text to the caller on every change. The text lives in Firestore
-    // (config/dailyTarget), so editing it in the Firebase console updates the
-    // home screen instantly — no app release needed. Returns the listener
-    // registration so the caller can remove it when its screen closes.
+    // its text and goal to the caller on every change. Everything lives in
+    // Firestore (config/dailyTarget), so editing it in the Firebase console
+    // updates the home screen instantly — no app release needed. Returns the
+    // listener registration so the caller can remove it when its screen closes.
     fun listenToDailyTarget(
-        onLoaded: (title: String, subtitle: String) -> Unit
+        onLoaded: (title: String, subtitle: String, goal: Int) -> Unit
     ): ListenerRegistration {
-        val defaultTitle = "🎯  Today's Target"
+        val defaultTitle = "🎯 TODAY'S TARGET"
         val defaultSubtitle = "Complete one set of exercises"
+        val defaultGoal = 5L
 
         val targetDoc = db.collection("config").document("dailyTarget")
         return targetDoc.addSnapshotListener { doc, error ->
@@ -255,13 +256,25 @@ object WorkoutRepository {
             if (doc != null && doc.exists()) {
                 onLoaded(
                     doc.getString("title") ?: defaultTitle,
-                    doc.getString("subtitle") ?: defaultSubtitle
+                    doc.getString("subtitle") ?: defaultSubtitle,
+                    (doc.getLong("goal") ?: defaultGoal).toInt()
                 )
+                // Older documents were created before the goal existed —
+                // add it so it can be edited in the console
+                if (doc.getLong("goal") == null) {
+                    targetDoc.update("goal", defaultGoal)
+                }
             } else if (doc != null) {
                 // First run against this database — create the document with
                 // defaults; the listener fires again once the write lands
-                targetDoc.set(mapOf("title" to defaultTitle, "subtitle" to defaultSubtitle))
-                onLoaded(defaultTitle, defaultSubtitle)
+                targetDoc.set(
+                    mapOf(
+                        "title" to defaultTitle,
+                        "subtitle" to defaultSubtitle,
+                        "goal" to defaultGoal
+                    )
+                )
+                onLoaded(defaultTitle, defaultSubtitle, defaultGoal.toInt())
             }
         }
     }

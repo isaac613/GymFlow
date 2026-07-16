@@ -9,6 +9,8 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -41,8 +43,13 @@ class MainActivity : AppCompatActivity() {
     // Where the camera will write the photo it takes
     private var currentImageUri: Uri? = null
 
-    // Live listener on the daily target card, removed in onDestroy
+    // Live listeners on the daily target and workout history, removed in onDestroy
     private var dailyTargetListener: ListenerRegistration? = null
+    private var historyListener: ListenerRegistration? = null
+
+    // Latest values feeding the hero card's daily-goal progress bar
+    private var dailyGoal = 5
+    private var todayCount = 0
 
     private val db get() = WorkoutRepository.db
 
@@ -104,15 +111,15 @@ class MainActivity : AppCompatActivity() {
         // Connect this activity to its XML layout file
         setContentView(R.layout.activity_main)
 
-        // Greet the signed-in user. Google users have a display name;
+        // Greet the signed-in user by name. Google users have a display name;
         // email/password users are greeted by the name part of their email.
         val tvWelcome = findViewById<TextView>(R.id.tvWelcome)
         // takeIf(isNotBlank) guards against Firebase returning "" instead of
         // null for the display name of email/password users
         val greetingName = user.displayName?.takeIf { it.isNotBlank() }
             ?: user.email?.substringBefore("@")
-            ?: "athlete"
-        tvWelcome.text = "Welcome, $greetingName!"
+            ?: "Athlete"
+        tvWelcome.text = greetingName.replaceFirstChar { it.uppercase() }
 
         // Show the profile photo: the custom camera photo if one was taken,
         // otherwise the user's Google account photo.
@@ -134,15 +141,11 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Open the workout categories screen
-        val btnViewWorkouts = findViewById<Button>(R.id.btnViewWorkouts)
-        btnViewWorkouts.setOnClickListener {
+        // Navigation cards: workouts and progress
+        findViewById<LinearLayout>(R.id.cardWorkouts).setOnClickListener {
             startActivity(Intent(this, WorkoutCategoriesActivity::class.java))
         }
-
-        // Open the progress screen
-        val btnViewProgress = findViewById<Button>(R.id.btnViewProgress)
-        btnViewProgress.setOnClickListener {
+        findViewById<LinearLayout>(R.id.cardProgress).setOnClickListener {
             startActivity(Intent(this, ProgressActivity::class.java))
         }
 
@@ -166,15 +169,20 @@ class MainActivity : AppCompatActivity() {
             .transform(CenterCrop(), RoundedCorners(resources.getDimensionPixelSize(R.dimen.banner_corner_radius)))
             .into(imgBanner)
 
-        // The daily target text comes from Firestore via a real-time listener:
-        // edit config/dailyTarget in the Firebase console and the card updates
-        // on screen instantly — no app release needed.
-        val tvTargetTitle = findViewById<TextView>(R.id.tvTargetTitle)
-        val tvTargetSubtitle = findViewById<TextView>(R.id.tvTargetSubtitle)
-        dailyTargetListener = WorkoutRepository.listenToDailyTarget { title, subtitle ->
-            tvTargetTitle.text = title
-            tvTargetSubtitle.text = subtitle
+        // The daily target (label text + goal) comes from Firestore via a
+        // real-time listener: edit config/dailyTarget in the Firebase console
+        // and the hero card updates on screen instantly.
+        dailyTargetListener = WorkoutRepository.listenToDailyTarget { title, subtitle, goal ->
+            findViewById<TextView>(R.id.tvTargetLabel).text = title
+            findViewById<TextView>(R.id.tvTargetText).text = subtitle
+            dailyGoal = goal
+            renderDailyProgress()
         }
+
+        // Live listener on the user's workout history: keeps the streak line
+        // and the daily-goal progress bar up to date the moment an exercise
+        // is completed anywhere in the app.
+        listenToHistory()
 
         // Seed the workout plan into Firestore on first run (no-op afterwards).
         // All app data lives in Firestore — nothing is hardcoded at runtime.
@@ -184,28 +192,26 @@ class MainActivity : AppCompatActivity() {
         WorkoutRepository.ensureExerciseImages()
     }
 
-    override fun onResume() {
-        super.onResume()
-        // Recompute the streak whenever the user comes back to the home screen
-        // (e.g. right after completing exercises in a workout)
-        if (::uid.isInitialized) {
-            loadStreak()
-        }
-    }
-
-    // Reads the user's workout history and counts how many consecutive days
-    // (ending today or yesterday) have at least one completed exercise.
-    private fun loadStreak() {
-        val tvStreak = findViewById<TextView>(R.id.tvStreak)
+    // Watches the workout history and recomputes the streak and today's
+    // completed-exercise count on every change.
+    private fun listenToHistory() {
         val dayFormat = SimpleDateFormat("yyyyMMdd", Locale.US)
 
-        db.collection("users").document(uid).collection("history").get()
-            .addOnSuccessListener { snapshot ->
+        historyListener = db.collection("users").document(uid).collection("history")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null || snapshot == null) return@addSnapshotListener
+
                 // Every calendar day on which something was completed
-                val activeDays = snapshot.documents
+                val completionDays = snapshot.documents
                     .mapNotNull { it.getTimestamp("completedAt")?.toDate() }
                     .map { dayFormat.format(it) }
-                    .toSet()
+
+                val activeDays = completionDays.toSet()
+                val today = dayFormat.format(Calendar.getInstance().time)
+
+                // How many exercises were completed today (drives the hero bar)
+                todayCount = completionDays.count { it == today }
+                renderDailyProgress()
 
                 // Walk backwards day by day counting the streak. If nothing
                 // was done today yet, an ongoing streak may still end yesterday.
@@ -220,7 +226,7 @@ class MainActivity : AppCompatActivity() {
                     calendar.add(Calendar.DAY_OF_YEAR, -1)
                 }
 
-                tvStreak.text = when {
+                findViewById<TextView>(R.id.tvStreak).text = when {
                     streak >= 2 -> "🔥 $streak-day streak!"
                     streak == 1 -> "🔥 1-day streak — come back tomorrow!"
                     else -> "Complete an exercise to start a streak!"
@@ -228,10 +234,27 @@ class MainActivity : AppCompatActivity() {
             }
     }
 
+    // Fills the hero card's progress line and bar from the latest goal and
+    // today's completion count
+    private fun renderDailyProgress() {
+        val capped = todayCount.coerceAtMost(dailyGoal)
+        val text = if (todayCount >= dailyGoal && dailyGoal > 0) {
+            "✅ Goal reached — $todayCount / $dailyGoal exercises today!"
+        } else {
+            "$todayCount / $dailyGoal exercises today"
+        }
+        findViewById<TextView>(R.id.tvTargetProgress).text = text
+
+        val bar = findViewById<ProgressBar>(R.id.pbDailyGoal)
+        bar.max = if (dailyGoal > 0) dailyGoal else 1
+        bar.progress = capped
+    }
+
     override fun onDestroy() {
         super.onDestroy()
-        // Stop the daily-target listener when the screen closes
+        // Stop the live listeners when the screen closes
         dailyTargetListener?.remove()
+        historyListener?.remove()
     }
 
     // Shows the saved camera photo if one exists, otherwise the Google photo
