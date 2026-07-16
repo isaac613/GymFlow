@@ -12,11 +12,26 @@
         android:orientation="vertical"
         android:padding="20dp">
 
+        <!-- Compact back link instead of a full-width button -->
+        <Button
+            android:id="@+id/btnBackHome"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:background="@android:color/transparent"
+            android:minWidth="0dp"
+            android:paddingStart="0dp"
+            android:paddingEnd="12dp"
+            android:text="←  Home"
+            android:textAllCaps="false"
+            android:textColor="@color/text_secondary"
+            android:textSize="15sp" />
+
         <TextView
             android:id="@+id/tvCategoriesTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="48dp"
+            android:layout_marginTop="8dp"
             android:text="Workout Categories"
             android:textColor="#FFFFFF"
             android:textSize="32sp"
@@ -29,16 +44,6 @@
             android:text="Pick the type of session you want to train today."
             android:textColor="#9E9E9E"
             android:textSize="15sp" />
-
-        <Button
-            android:id="@+id/btnBackHome"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="20dp"
-            android:background="@drawable/secondary_button_bg"
-            android:text="Back to Home"
-            android:textAllCaps="false"
-            android:textColor="#FFFFFF" />
 
         <!-- Spinner shown while the categories load from Firestore -->
         <ProgressBar

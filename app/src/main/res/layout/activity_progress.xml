@@ -11,11 +11,26 @@
         android:orientation="vertical"
         android:padding="20dp">
 
+        <!-- Compact back link instead of a full-width button -->
+        <Button
+            android:id="@+id/btnBackHomeFromProgress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:background="@android:color/transparent"
+            android:minWidth="0dp"
+            android:paddingStart="0dp"
+            android:paddingEnd="12dp"
+            android:text="←  Home"
+            android:textAllCaps="false"
+            android:textColor="@color/text_secondary"
+            android:textSize="15sp" />
+
         <TextView
             android:id="@+id/tvProgressTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="48dp"
+            android:layout_marginTop="8dp"
             android:text="Progress Dashboard"
             android:textColor="#FFFFFF"
             android:textSize="32sp"
@@ -28,16 +43,6 @@
             android:text="Your workout analytics at a glance"
             android:textColor="#9E9E9E"
             android:textSize="15sp" />
-
-        <Button
-            android:id="@+id/btnBackHomeFromProgress"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="18dp"
-            android:background="@drawable/secondary_button_bg"
-            android:text="Back to Home"
-            android:textAllCaps="false"
-            android:textColor="#FFFFFF" />
 
         <!-- Spinner shown while the dashboard numbers load from Firestore -->
         <ProgressBar
@@ -60,37 +65,38 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Overall Progress"
+                android:letterSpacing="0.15"
+                android:text="OVERALL PROGRESS"
                 android:textColor="@color/text_on_accent"
-                android:textSize="18sp"
+                android:textSize="12sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tvHeroPercent"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="8dp"
                 android:text="0%"
                 android:textColor="#FFFFFF"
-                android:textSize="36sp"
+                android:textSize="48sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tvHeroSubtext"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="2dp"
                 android:text="0 of 20 exercises completed"
                 android:textColor="@color/text_on_accent"
-                android:textSize="15sp" />
+                android:textSize="14sp" />
 
             <ProgressBar
                 android:id="@+id/progressOverall"
                 style="?android:attr/progressBarStyleHorizontal"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="10dp"
                 android:layout_marginTop="16dp"
-                android:progressTint="#FFFFFF" />
+                android:progressDrawable="@drawable/progress_rounded_light" />
         </LinearLayout>
 
         <!-- Stat cards -->
@@ -112,9 +118,9 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Exercises"
+                    android:text="✅ Exercises"
                     android:textColor="#AEB5C8"
-                    android:textSize="14sp" />
+                    android:textSize="13sp" />
 
                 <TextView
                     android:id="@+id/tvExercisesCompletedValue"
@@ -147,9 +153,9 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Categories"
+                    android:text="📂 Categories"
                     android:textColor="#AEB5C8"
-                    android:textSize="14sp" />
+                    android:textSize="13sp" />
 
                 <TextView
                     android:id="@+id/tvCategoriesStartedValue"
@@ -181,9 +187,9 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Workouts"
+                    android:text="🏆 Workouts"
                     android:textColor="#AEB5C8"
-                    android:textSize="14sp" />
+                    android:textSize="13sp" />
 
                 <TextView
                     android:id="@+id/tvWorkoutsFinishedValue"
@@ -242,8 +248,9 @@
                 android:id="@+id/pbUpperBody"
                 style="?android:attr/progressBarStyleHorizontal"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:progressTint="@color/accent" />
+                android:layout_height="8dp"
+                android:layout_marginTop="6dp"
+                android:progressDrawable="@drawable/progress_rounded" />
 
             <!-- Lower Body -->
             <TextView
@@ -266,8 +273,9 @@
                 android:id="@+id/pbLowerBody"
                 style="?android:attr/progressBarStyleHorizontal"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:progressTint="@color/accent" />
+                android:layout_height="8dp"
+                android:layout_marginTop="6dp"
+                android:progressDrawable="@drawable/progress_rounded" />
 
             <!-- Push -->
             <TextView
@@ -290,8 +298,9 @@
                 android:id="@+id/pbPush"
                 style="?android:attr/progressBarStyleHorizontal"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:progressTint="@color/accent" />
+                android:layout_height="8dp"
+                android:layout_marginTop="6dp"
+                android:progressDrawable="@drawable/progress_rounded" />
 
             <!-- Pull -->
             <TextView
@@ -314,8 +323,9 @@
                 android:id="@+id/pbPull"
                 style="?android:attr/progressBarStyleHorizontal"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:progressTint="@color/accent" />
+                android:layout_height="8dp"
+                android:layout_marginTop="6dp"
+                android:progressDrawable="@drawable/progress_rounded" />
 
             <!-- Core -->
             <TextView
@@ -338,8 +348,9 @@
                 android:id="@+id/pbCore"
                 style="?android:attr/progressBarStyleHorizontal"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:progressTint="@color/accent" />
+                android:layout_height="8dp"
+                android:layout_marginTop="6dp"
+                android:progressDrawable="@drawable/progress_rounded" />
         </LinearLayout>
 
         <!-- Recent activity -->

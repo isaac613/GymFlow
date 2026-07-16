@@ -91,9 +91,9 @@
             android:id="@+id/progressBar"
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="8dp"
             android:layout_marginTop="12dp"
-            android:progressTint="@color/accent" />
+            android:progressDrawable="@drawable/progress_rounded" />
 
         <!-- Rest countdown, shown after completing an exercise -->
         <TextView

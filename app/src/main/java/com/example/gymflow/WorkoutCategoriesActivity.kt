@@ -5,19 +5,26 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
 import android.util.Log
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.widget.Button
+import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.CenterCrop
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.firebase.firestore.ListenerRegistration
 
-// Lists the workout categories. The categories are loaded from Firestore
-// and the cards are created dynamically — nothing here is static, so new
-// categories can be added straight from the Firebase console.
+// Lists the workout categories as image cards. Everything is loaded from
+// Firestore and built dynamically — each card uses one of its exercises'
+// demo photos as the background, so new categories added in the Firebase
+// console appear automatically.
 class WorkoutCategoriesActivity : AppCompatActivity() {
 
     // Live listener on the categories collection, removed in onDestroy
@@ -30,8 +37,7 @@ class WorkoutCategoriesActivity : AppCompatActivity() {
         setContentView(R.layout.activity_workout_categories)
 
         // Back button returns the user to the home screen
-        val btnBackHome = findViewById<Button>(R.id.btnBackHome)
-        btnBackHome.setOnClickListener {
+        findViewById<Button>(R.id.btnBackHome).setOnClickListener {
             finish()
         }
 
@@ -39,8 +45,8 @@ class WorkoutCategoriesActivity : AppCompatActivity() {
     }
 
     // Live listener on the categories collection: the screen rebuilds itself
-    // whenever the plan changes (even for edits made in the Firebase console).
-    // The exercise counts are re-read on each change to keep the cards fresh.
+    // whenever the plan changes. The exercises are re-read on each change for
+    // the per-category counts and the card background images.
     private fun loadCategoriesFromFirestore() {
         val container = findViewById<LinearLayout>(R.id.categoriesContainer)
         val spinner = findViewById<ProgressBar>(R.id.pbLoadingCategories)
@@ -65,11 +71,19 @@ class WorkoutCategoriesActivity : AppCompatActivity() {
 
                 db.collection("exercises").get()
                     .addOnSuccessListener { exerciseSnapshot ->
-                        // Count how many exercises each category has
+                        // Per category: how many exercises, and the first
+                        // available demo image to use as the card background
                         val countPerCategory = mutableMapOf<String, Int>()
+                        val imagePerCategory = mutableMapOf<String, String>()
+
                         for (doc in exerciseSnapshot.documents) {
                             val category = doc.getString("category") ?: continue
                             countPerCategory[category] = (countPerCategory[category] ?: 0) + 1
+
+                            val image = doc.getString("imageUrl")
+                            if (!image.isNullOrEmpty() && category !in imagePerCategory) {
+                                imagePerCategory[category] = image
+                            }
                         }
 
                         spinner.visibility = View.GONE
@@ -78,70 +92,102 @@ class WorkoutCategoriesActivity : AppCompatActivity() {
 
                         container.removeAllViews()
                         for (categoryName in categories) {
-                            val count = countPerCategory[categoryName] ?: 0
-                            container.addView(buildCategoryCard(categoryName, count))
+                            container.addView(
+                                buildCategoryCard(
+                                    categoryName,
+                                    countPerCategory[categoryName] ?: 0,
+                                    imagePerCategory[categoryName]
+                                )
+                            )
                         }
                     }
             }
     }
 
-    // Builds one category card: emoji badge, name + exercise count, chevron.
-    // Built in code (not XML) because the rows come from Firestore.
-    private fun buildCategoryCard(categoryName: String, exerciseCount: Int): LinearLayout {
+    // Builds one image card: exercise photo background, dark fade, then
+    // emoji + category name + exercise count on top, chevron on the right.
+    private fun buildCategoryCard(
+        categoryName: String,
+        exerciseCount: Int,
+        imageUrl: String?
+    ): FrameLayout {
         val density = resources.displayMetrics.density
         fun dp(value: Int) = (value * density).toInt()
 
-        // The card row itself
-        val card = LinearLayout(this)
-        card.orientation = LinearLayout.HORIZONTAL
-        card.gravity = Gravity.CENTER_VERTICAL
+        val card = FrameLayout(this)
         val cardParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
+            LinearLayout.LayoutParams.MATCH_PARENT, dp(110)
         )
-        cardParams.topMargin = dp(12)
+        cardParams.topMargin = dp(14)
         card.layoutParams = cardParams
-        card.setPadding(dp(16), dp(16), dp(16), dp(16))
-        card.setBackgroundResource(R.drawable.exercise_card_default)
         card.isClickable = true
+        card.isFocusable = true
 
-        // Round emoji badge on the left
-        val emojiBadge = TextView(this)
-        emojiBadge.text = emojiForCategory(categoryName)
-        emojiBadge.textSize = 22f
-        emojiBadge.gravity = Gravity.CENTER
-        emojiBadge.setBackgroundResource(R.drawable.category_icon_bg)
-        emojiBadge.layoutParams = LinearLayout.LayoutParams(dp(48), dp(48))
+        // Ripple feedback on tap
+        val rippleValue = TypedValue()
+        theme.resolveAttribute(android.R.attr.selectableItemBackground, rippleValue, true)
+        card.foreground = getDrawable(rippleValue.resourceId)
 
-        // Category name + exercise count in the middle
+        // Background: the category's first exercise photo (rounded), or the
+        // plain dark card style when no image exists yet
+        val image = ImageView(this)
+        image.layoutParams = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT
+        )
+        if (imageUrl != null) {
+            Glide.with(this)
+                .load(imageUrl)
+                .transform(CenterCrop(), RoundedCorners(dp(18)))
+                .into(image)
+        } else {
+            image.setBackgroundResource(R.drawable.exercise_card_default)
+        }
+        card.addView(image)
+
+        // Dark fade so the text on the left stays readable
+        val scrim = View(this)
+        scrim.layoutParams = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT
+        )
+        scrim.setBackgroundResource(R.drawable.card_scrim)
+        card.addView(scrim)
+
+        // Category name + exercise count
         val textColumn = LinearLayout(this)
         textColumn.orientation = LinearLayout.VERTICAL
-        val columnParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-        columnParams.marginStart = dp(14)
-        textColumn.layoutParams = columnParams
+        val textParams = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT
+        )
+        textParams.gravity = Gravity.START or Gravity.CENTER_VERTICAL
+        textParams.marginStart = dp(20)
+        textColumn.layoutParams = textParams
 
         val tvName = TextView(this)
-        tvName.text = categoryName
+        tvName.text = "${emojiForCategory(categoryName)}  $categoryName"
         tvName.setTextColor(Color.WHITE)
-        tvName.textSize = 17f
+        tvName.textSize = 20f
         tvName.typeface = Typeface.DEFAULT_BOLD
 
         val tvCount = TextView(this)
         tvCount.text = "$exerciseCount exercises"
-        tvCount.setTextColor(getColor(R.color.text_secondary))
+        tvCount.setTextColor(Color.parseColor("#D1D5DB"))
         tvCount.textSize = 13f
 
         textColumn.addView(tvName)
         textColumn.addView(tvCount)
+        card.addView(textColumn)
 
         // Chevron on the right to hint that the card navigates
         val chevron = TextView(this)
         chevron.text = "›"
-        chevron.setTextColor(getColor(R.color.text_muted))
+        chevron.setTextColor(Color.WHITE)
         chevron.textSize = 26f
-
-        card.addView(emojiBadge)
-        card.addView(textColumn)
+        val chevronParams = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT
+        )
+        chevronParams.gravity = Gravity.END or Gravity.CENTER_VERTICAL
+        chevronParams.marginEnd = dp(20)
+        chevron.layoutParams = chevronParams
         card.addView(chevron)
 
         // Tapping the card opens the detail screen for this category

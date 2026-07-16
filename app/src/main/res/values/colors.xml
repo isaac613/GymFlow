@@ -8,16 +8,16 @@
     <color name="surface_light">#1E1E1E</color>
     <color name="surface_stroke">#2B2B2B</color>
 
-    <!-- Brand accent (green) -->
-    <color name="accent">#2ECC71</color>
-    <color name="accent_dark">#1E8449</color>
-    <color name="accent_deep">#145A32</color>
+    <!-- Brand accent (emerald — deeper and calmer than a pure green) -->
+    <color name="accent">#10B981</color>
+    <color name="accent_dark">#059669</color>
+    <color name="accent_deep">#064E3B</color>
 
     <!-- Text -->
     <color name="text_primary">#FFFFFF</color>
     <color name="text_secondary">#9E9E9E</color>
     <color name="text_muted">#757575</color>
-    <color name="text_on_accent">#EAFBF1</color>
+    <color name="text_on_accent">#D1FAE5</color>
 
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>

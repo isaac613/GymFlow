@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Left-to-right dark fade laid over category card images so the
+     text on the left stays readable -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <gradient
+        android:angle="0"
+        android:startColor="#E6000000"
+        android:endColor="#26000000" />
+    <corners android:radius="18dp" />
+</shape>
