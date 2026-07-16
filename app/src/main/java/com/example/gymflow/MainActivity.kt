@@ -141,12 +141,14 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Navigation cards: workouts and progress
+        // Navigation cards: workouts and progress (with a slide transition)
         findViewById<LinearLayout>(R.id.cardWorkouts).setOnClickListener {
             startActivity(Intent(this, WorkoutCategoriesActivity::class.java))
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
         }
         findViewById<LinearLayout>(R.id.cardProgress).setOnClickListener {
             startActivity(Intent(this, ProgressActivity::class.java))
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
         }
 
         // Sign the user out of both Firebase and Google, then return to Login
@@ -247,7 +249,8 @@ class MainActivity : AppCompatActivity() {
 
         val bar = findViewById<ProgressBar>(R.id.pbDailyGoal)
         bar.max = if (dailyGoal > 0) dailyGoal else 1
-        bar.progress = capped
+        // true = animate the fill instead of jumping
+        bar.setProgress(capped, true)
     }
 
     override fun onDestroy() {

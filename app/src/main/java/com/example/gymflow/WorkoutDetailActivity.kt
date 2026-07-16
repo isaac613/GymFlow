@@ -44,6 +44,7 @@ class WorkoutDetailActivity : AppCompatActivity() {
     private var planExercises = listOf<Exercise>()   // latest workout plan
     private var completedNames = listOf<String>()    // latest user progress
     private var planLoaded = false
+    private var listAnimated = false
 
     // Live listeners are kept so they can be removed when the screen closes
     private val listeners = mutableListOf<ListenerRegistration>()
@@ -165,6 +166,12 @@ class WorkoutDetailActivity : AppCompatActivity() {
         exerciseAdapter.notifyDataSetChanged()
         updateProgress()
 
+        // Staggered entrance animation the first time the list appears
+        if (!listAnimated && merged.isNotEmpty()) {
+            listAnimated = true
+            recyclerView.scheduleLayoutAnimation()
+        }
+
         // Loading finished — show either the list or the empty state
         pbLoadingExercises.visibility = View.GONE
         tvEmptyState.visibility = if (merged.isEmpty()) View.VISIBLE else View.GONE
@@ -177,7 +184,8 @@ class WorkoutDetailActivity : AppCompatActivity() {
 
         tvProgressText.text = "Completed: $completedCount / $totalCount exercises"
         progressBar.max = if (totalCount > 0) totalCount else 1
-        progressBar.progress = completedCount
+        // true = animate the fill instead of jumping
+        progressBar.setProgress(completedCount, true)
     }
 
     // Called when the user taps an exercise's complete/undo button
@@ -365,6 +373,12 @@ class WorkoutDetailActivity : AppCompatActivity() {
     private fun progressDoc() =
         db.collection("users").document(uid)
             .collection("progress").document(category)
+
+    // Slide back out to the right when leaving this screen
+    override fun finish() {
+        super.finish()
+        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+    }
 
     override fun onDestroy() {
         super.onDestroy()

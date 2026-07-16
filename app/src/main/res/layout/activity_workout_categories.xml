@@ -74,6 +74,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
             android:layout_marginBottom="24dp"
+            android:layoutAnimation="@anim/layout_fall_down"
             android:orientation="vertical" />
 
     </LinearLayout>

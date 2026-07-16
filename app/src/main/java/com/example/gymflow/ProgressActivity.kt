@@ -1,5 +1,6 @@
 package com.example.gymflow
 
+import android.animation.ValueAnimator
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -26,6 +27,10 @@ class ProgressActivity : AppCompatActivity() {
     private var totalPerCategory: Map<String, Int>? = null
     private var completedPerCategory: Map<String, Int>? = null
     private var categoriesStarted = 0
+
+    // Drives the count-up animation of the hero percentage
+    private var shownPercent = 0
+    private var percentAnimator: ValueAnimator? = null
 
     private val listeners = mutableListOf<ListenerRegistration>()
 
@@ -186,13 +191,24 @@ class ProgressActivity : AppCompatActivity() {
             (totalCompleted * 100) / totalPossibleExercises
         }
 
-        // Hero card
-        findViewById<TextView>(R.id.tvHeroPercent).text = "$overallPercent%"
+        // Hero card: animate the donut ring filling and the percent counting up
         findViewById<TextView>(R.id.tvHeroSubtext).text =
             "$totalCompleted of $totalPossibleExercises exercises completed"
+
         val progressOverall = findViewById<ProgressBar>(R.id.progressOverall)
         progressOverall.max = 100
-        progressOverall.progress = overallPercent
+        progressOverall.setProgress(overallPercent, true)
+
+        val tvPercent = findViewById<TextView>(R.id.tvHeroPercent)
+        percentAnimator?.cancel()
+        percentAnimator = ValueAnimator.ofInt(shownPercent, overallPercent).apply {
+            duration = 800
+            addUpdateListener { animator ->
+                shownPercent = animator.animatedValue as Int
+                tvPercent.text = "$shownPercent%"
+            }
+            start()
+        }
 
         // Stat cards
         findViewById<TextView>(R.id.tvExercisesCompletedValue).text = totalCompleted.toString()
@@ -222,13 +238,21 @@ class ProgressActivity : AppCompatActivity() {
 
         val progressBar = findViewById<ProgressBar>(progressBarId)
         progressBar.max = if (total > 0) total else 1
-        progressBar.progress = completed
+        // true = animate the fill instead of jumping
+        progressBar.setProgress(completed, true)
+    }
+
+    // Slide back out to the right when leaving this screen
+    override fun finish() {
+        super.finish()
+        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        // Stop the live listeners when the screen closes
+        // Stop the live listeners and animations when the screen closes
         listeners.forEach { it.remove() }
+        percentAnimator?.cancel()
     }
 
     companion object {

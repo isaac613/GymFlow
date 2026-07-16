@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Circular "donut" progress ring: white fill over a translucent track.
+     Used as the progressDrawable of a horizontal-style ProgressBar, whose
+     level (0..max) controls how much of the ring is swept. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@android:id/background">
+        <shape
+            android:innerRadiusRatio="2.4"
+            android:shape="ring"
+            android:thicknessRatio="9"
+            android:useLevel="false">
+            <solid android:color="#4DFFFFFF" />
+        </shape>
+    </item>
+    <item android:id="@android:id/progress">
+        <shape
+            android:innerRadiusRatio="2.4"
+            android:shape="ring"
+            android:thicknessRatio="9"
+            android:useLevel="true">
+            <solid android:color="#FFFFFF" />
+        </shape>
+    </item>
+</layer-list>

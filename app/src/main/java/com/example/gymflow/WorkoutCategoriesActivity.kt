@@ -100,6 +100,8 @@ class WorkoutCategoriesActivity : AppCompatActivity() {
                                 )
                             )
                         }
+                        // Staggered entrance animation for the cards
+                        container.scheduleLayoutAnimation()
                     }
             }
     }
@@ -214,6 +216,13 @@ class WorkoutCategoriesActivity : AppCompatActivity() {
         val intent = Intent(this, WorkoutDetailActivity::class.java)
         intent.putExtra("category", category)
         startActivity(intent)
+        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+    }
+
+    // Slide back out to the right when leaving this screen
+    override fun finish() {
+        super.finish()
+        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
     }
 
     override fun onDestroy() {
